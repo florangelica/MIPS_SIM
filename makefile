@@ -1,8 +1,13 @@
 CC = gcc
-FILES = main.c
+FILES = main.c regFile.c
+OBJECTS = main.o regFile.o
 
-all: $(FILES)
-	$(CC) $(FILES) -o run
+main.run: $(OBJECTS)
+	$(CC) -Llib $(OBJECTS) -lm
+
+$(OBJECTS): $(FILES)
+	$(CC) -Wall -Iinclude -c $(FILES)
 
 clean:
-	rm run
+	rm *.o
+	rm a.out
