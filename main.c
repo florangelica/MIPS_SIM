@@ -1,12 +1,26 @@
 #include<stdio.h>
 #include"regFile.h"
+#include"decode.h"
+
+
 
 int main (){
-    struct MIPS_reg regFile[REGNUM];
     int i;
-    initRegFile(regFile);
-    for ( i=0; i<32; i++){
-        printf("regFile[%d].id= %s\n",i,regFile[i].id);
-    }
+    struct Inst *addInst = malloc(sizeof(struct Inst));
+    // struct MIPS_reg regFile[REGNUM] = malloc(REGNUM * sizeof(struct regFile));
+    //initRegFile(regFile);
+
+    initInst(addInst);
+    printf("addInst.op = %x\n",addInst->op);
+
+    // add t0,s1,s2   =   0x02324020
+    // op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
+    // 
+    uint32_t add_MC = 0x02324020;
+
+    decode( add_MC, addInst);
+
+
+    free(addInst);
     return 0;
 }

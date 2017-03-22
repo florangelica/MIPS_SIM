@@ -15,7 +15,7 @@ void initRegFile( struct MIPS_reg regFile[REGNUM]){
   strcpy(regFile[2].id,"v0");
   regFile[2].val = 0x00000000;
   // reg 3
-  strcpy(regFile[3].id,"at");
+  strcpy(regFile[3].id,"v1");
   regFile[3].val = 0x00000000;
 
   // reg 4
