@@ -1,6 +1,6 @@
 CC = gcc
-FILES = main.c regFile.c decode.c
-OBJECTS = main.o regFile.o decode.o
+FILES = main.c  decode.c
+OBJECTS = main.o decode.o
 
 main.run: $(OBJECTS)
 	$(CC) -Llib $(OBJECTS) -lm
