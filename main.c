@@ -1,25 +1,24 @@
 #include<stdio.h>
-#include"decode.h"
-
+#include<stdlib.h>
+#include"stages.h"
+#include"structs.h"
 
 
 int main (){
-    int i;
-    uint32_t *regFile;
-    regFile = malloc(32*sizeof(uint32_t));
-    struct Inst *addInst = malloc(sizeof(struct Inst));
-
-    initInst(addInst);
+    // heap structs
+    initStructs();
+    // stack vars
 
     // add t0,s1,s2   =   0x02324020
     // op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
     // 
-    regFile[0] = 0x02324020;
+    FD->MI = 0x02324020;
 
-    decode( regFile[0], addInst);
+    decode();
+    execute();
+    //memory(EM, sMW);
+    //writeback();
 
-
-    free(regFile);
-    free(addInst);
+    freeStructs();
     return 0;
 }
