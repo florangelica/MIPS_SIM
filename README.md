@@ -15,7 +15,7 @@
   5. delete local branch
     * git branch -d NAME
   6. delete remote branch
-    * git push origin -d NAME
+    * git push origin --delete NAME
 
 
 Matt McNicholsa </br>
