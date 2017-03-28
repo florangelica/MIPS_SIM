@@ -1,6 +1,6 @@
 CC = gcc
-FILES = main.c  decode.c
-OBJECTS = main.o decode.o
+FILES = main.c  stages.c structs.c
+OBJECTS = main.o stages.o structs.o
 
 main.run: $(OBJECTS)
 	$(CC) -Llib $(OBJECTS) -lm
