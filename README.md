@@ -15,8 +15,9 @@
   5. delete local branch
     * git branch -d NAME
   6. delete remote branch
-    * git push origin --delete NAME
-
+    * git push origin --delete NAME 
+  7. merge master to current
+    * git merge master
 
 Matt McNicholsa </br>
 Flor Gordivas
