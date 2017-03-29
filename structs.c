@@ -23,7 +23,6 @@ void freeStructs(){
     free(regFile);
     free(iMem);
     free(dMem);
-    free(ctrl);
     free(FD);
     free(DE);
     free(EM);
