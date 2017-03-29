@@ -3,8 +3,14 @@
 #include<stdint.h>
 #include<stdlib.h>
 
+// define constant values
 #define MEM_SIZE 500
-
+// add t0,s1,s2   =   0x02324020
+// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
+#define ADD_INST 0x02324020 
+// or t0,s1,s2   =   0x02324025
+// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100101)
+#define OR_INST 0x02324025
 struct PIPE{
   uint32_t PC: 32;
   uint8_t op: 6;
