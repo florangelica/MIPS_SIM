@@ -5,23 +5,6 @@
 
 #define MEM_SIZE 500
 
-struct PIPE{
-  uint32_t PC: 32;
-  uint8_t op: 6;
-  uint8_t rs: 5;
-  uint8_t rt: 5;
-  uint8_t rd: 5;
-  uint8_t shamt: 5;
-  uint8_t funct: 6;
-  uint16_t immed: 16;
-  uint32_t addrs: 26;
-  uint32_t MI: 32;
-  uint32_t RD1: 32;
-  uint32_t RD2: 32;
-  uint32_t WD: 32;
-  uint32_t ALU_result: 32;
-  uint8_t ALU_zero: 1;
-};
 
 struct CONTROL{
   
@@ -39,6 +22,25 @@ struct CONTROL{
   uint8_t MemWrite: 1;
   /* 0: WD = ALU output        1: WD = from data mem*/
   uint8_t MemtoReg: 1;
+};
+
+struct PIPE{
+  uint32_t PC: 32;
+  uint8_t op: 6;
+  uint8_t rs: 5;
+  uint8_t rt: 5;
+  uint8_t rd: 5;
+  uint8_t shamt: 5;
+  uint8_t funct: 6;
+  uint16_t immed: 16;
+  uint32_t addrs: 26;
+  uint32_t MI: 32;
+  uint32_t RD1: 32;
+  uint32_t RD2: 32;
+  uint32_t WD: 32;
+  uint32_t ALU_result: 32;
+  uint8_t ALU_zero: 1;
+  struct CONTROL;
 };
 
 uint32_t *regFile;
