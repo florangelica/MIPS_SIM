@@ -24,10 +24,21 @@ struct PIPE{
 };
 
 struct CONTROL{
-  uint8_t c1:1;
-  uint8_t c2:1;
-  uint8_t c3:1;
-  uint8_t c4:1;
+  
+  /* 0: next PC = PC +4        1: computed branch target */
+  uint8_t PCSrc: 1;
+  /* 0: 2nd ALU operand = RD2  1: 2nd ALU Operand = 16-bit sign extnd immed val */
+  uint8_t ALUSrc: 1; 
+  /* 0: Destination reg = rt   1: Destination reg = rd */
+  uint8_t RegDst: 1;
+  /* 0: NONE                   1: the WRITE REG is written to with WD*/
+  uint8_t RegWrite: 1;
+  /* 0: NONE                   1: RD = Data mem from addr*/
+  uint8_t MemRead: 1;
+  /* 0: NONE                   1: Data mem from addr = WD*/
+  uint8_t MemWrite: 1;
+  /* 0: WD = ALU output        1: WD = from data mem*/
+  uint8_t MemtoReg: 1;
 };
 
 uint32_t *regFile;
