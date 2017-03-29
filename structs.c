@@ -7,7 +7,6 @@ void initStructs(){
     regFile = malloc(32*sizeof(uint32_t));
     iMem = malloc(MEM_SIZE*sizeof(uint32_t));
     dMem = malloc(MEM_SIZE*sizeof(uint32_t));
-    ctrl = malloc(sizeof(struct CONTROL));
     FD = malloc(sizeof(struct PIPE));
     DE= malloc(sizeof(struct PIPE));
     EM= malloc(sizeof(struct PIPE));

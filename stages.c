@@ -36,6 +36,8 @@ void decode(){
     printf("DE->funct: 0x%x\n", DE->funct);
 }
 
+// input: DE
+// output: sEM
 void execute(){
   printf("running execute\n");
 }
