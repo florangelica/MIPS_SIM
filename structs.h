@@ -5,8 +5,12 @@
 
 // define constant values
 #define MEM_SIZE 500
-<<<<<<< HEAD
-
+// add t0,s1,s2   =   0x02324020
+// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
+#define ADD_INST 0x02324020 
+// or t0,s1,s2   =   0x02324025
+// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100101)
+#define OR_INST 0x02324025
 
 struct CONTROL{
   
@@ -26,14 +30,6 @@ struct CONTROL{
   uint8_t MemtoReg: 1;
 };
 
-=======
-// add t0,s1,s2   =   0x02324020
-// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
-#define ADD_INST 0x02324020 
-// or t0,s1,s2   =   0x02324025
-// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100101)
-#define OR_INST 0x02324025
->>>>>>> mattDev
 struct PIPE{
   uint32_t PC: 32;
   uint8_t op: 6;
