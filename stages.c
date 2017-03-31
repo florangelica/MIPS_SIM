@@ -16,13 +16,22 @@ void decode(){
         DE->immed = (uint32_t) 0;
         DE->addrs = (uint32_t) 0;
         DE->MI = (uint32_t) 0;
-        DE->RD1 = (uint32_t) 0;
-        DE->RD2 = (uint32_t) 0;
         DE->WD = (uint32_t) 0;
         DE->ALU_result = (uint32_t) 0;
         DE->ALU_zero = (uint32_t) 0;
-        DE->CTRL.ALUsrc = 0;
-        DE->CTRL.ALUop = 0x00;
+        // set RD1 and RD2
+        DE->RD1 = regFile[DE->rs];
+        DE->RD2 = regFile[DE->rt];
+        // set ALUsrc and ALUop based on instruction
+        if(DE->funct == 0x25){
+            //or
+            DE->CTRL.ALUsrc = 0;
+            DE->CTRL.ALUop = 0x01;
+        }else if( DE->funct == 0x20){
+            // and
+            DE->CTRL.ALUsrc = 0;
+            DE->CTRL.ALUop = 0x02;
+        }
     }else{
         // rs 
         DE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
@@ -30,6 +39,7 @@ void decode(){
         DE->rt = (uint8_t) (FD->MI >> 16) & 0x1f;
         // immed
         DE->immed = (uint32_t) (FD->MI >> 16) & 0xFFFF;
+        DE->CTRL.ALUsrc = 1;
     }
 
 
@@ -39,6 +49,8 @@ void decode(){
     printf("DE->rd: 0x%x\n", DE->rd);
     printf("DE->shamt: 0x%x\n", DE->shamt);
     printf("DE->funct: 0x%x\n", DE->funct);
+    printf("DE->RD1: 0x%x\n", DE->RD1);
+    printf("DE->RD2: 0x%x\n", DE->RD2);
 }
 
 // input: DE
@@ -54,11 +66,11 @@ void execute(){
 
     // determine ALU operation
     switch(DE->CTRL.ALUop){
-        case 0x00:
-            printf("ALUop is 0x00\n");
-            break;
         case 0x01:
             printf("ALUop is 0x01\n");
+            break;
+        case 0x02:
+            printf("ALUop is 0x02\n");
             break;
     }
 }

@@ -8,10 +8,12 @@
 int main (){
     // heap structs
     initStructs();
-    // stack vars
 
+    // init values
     FD->MI = OR_INST;
-
+    regFile[0x11] = 0xDEAD;
+    regFile[0x12] = 0xBEEF;
+    
     decode();
     execute();
     //memory(EM, sMW);
