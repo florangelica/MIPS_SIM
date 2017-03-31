@@ -12,10 +12,10 @@ void initStructs(){
     EM= malloc(sizeof(struct PIPE));
     MW= malloc(sizeof(struct PIPE));
     
-     sFD = malloc(sizeof(struct PIPE));
-     sDE= malloc(sizeof(struct PIPE));
-     sEM = malloc(sizeof(struct PIPE));
-     sMW = malloc(sizeof(struct PIPE));
+    sFD = malloc(sizeof(struct PIPE));
+    sDE= malloc(sizeof(struct PIPE));
+    sEM = malloc(sizeof(struct PIPE));
+    sMW = malloc(sizeof(struct PIPE));
 }
 
 void freeStructs(){

@@ -13,40 +13,41 @@
 #define OR_INST 0x02324025
 
 struct CONTROL{
-  
-  // 0: next PC = PC +4        1: computed branch target 
-  uint8_t PCSrc: 1;
-  // 0: 2nd ALU operand = RD2  1: 2nd ALU Operand = 16-bit sign extnd immed val 
-  uint8_t ALUSrc: 1; 
-  // 0: Destination reg = rt   1: Destination reg = rd 
-  uint8_t RegDst: 1;
-  //0: NONE                   1: the WRITE REG is written to with WD
-  uint8_t RegWrite: 1;
-  // 0: NONE                   1: RD = Data mem from addr
-  uint8_t MemRead: 1;
-  // 0: NONE                   1: Data mem from addr = WD
-  uint8_t MemWrite: 1;
-  // 0: WD = ALU output        1: WD = from data mem
-  uint8_t MemtoReg: 1;
+    // 0: next PC = PC +4        1: computed branch target 
+    uint8_t PCsrc: 1;
+    // 0: 2nd ALU operand = RD2  1: 2nd ALU Operand = 16-bit sign extnd immed val 
+    uint8_t ALUsrc: 1; 
+    // designates which operation the ALU is to execute
+    uint8_t ALUop: 8;
+    // 0: Destination reg = rt   1: Destination reg = rd 
+    uint8_t RegDst: 1;
+    // 0: NONE                   1: the WRITE REG is written to with WD
+    uint8_t RegWrite: 1;
+    // 0: NONE                   1: RD = Data mem from addr
+    uint8_t MemRead: 1;
+    // 0: NONE                   1: Data mem from addr = WD
+    uint8_t MemWrite: 1;
+    // 0: WD = ALU output        1: WD = from data mem
+    uint8_t MemtoReg: 1;
 };
 
 struct PIPE{
-  uint32_t PC: 32;
-  uint8_t op: 6;
-  uint8_t rs: 5;
-  uint8_t rt: 5;
-  uint8_t rd: 5;
-  uint8_t shamt: 5;
-  uint8_t funct: 6;
-  uint16_t immed: 16;
-  uint32_t addrs: 26;
-  uint32_t MI: 32;
-  uint32_t RD1: 32;
-  uint32_t RD2: 32;
-  uint32_t WD: 32;
-  uint32_t ALU_result: 32;
-  uint8_t ALU_zero: 1;
-  struct CONTROL CTRL;
+    uint32_t PC: 32;
+    uint8_t op: 6;
+    uint8_t rs: 5;
+    uint8_t rt: 5;
+    uint8_t rd: 5;
+    uint8_t shamt: 5;
+    uint8_t funct: 6;
+    uint32_t immed: 32;
+    uint32_t addrs: 26;
+    uint32_t MI: 32;
+    uint32_t RD1: 32;
+    uint32_t RD2: 32;
+    uint32_t WD: 32;
+    uint32_t ALU_result: 32;
+    uint8_t ALU_zero: 1;
+    struct CONTROL CTRL;
 };
 
 uint32_t *regFile;
