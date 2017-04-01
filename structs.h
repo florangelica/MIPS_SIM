@@ -53,7 +53,7 @@ struct PIPE{
 uint32_t *regFile;
 uint32_t *iMem;
 uint32_t *dMem;
-
+uint32_t *PC;
 struct PIPE *FD;
 struct PIPE *DE;
 struct PIPE *EM;

@@ -4,9 +4,11 @@
 #include<stdint.h>
 #include"structs.h"
 
-void fetch( uint32_t PC);
+void fetch();
 void decode();
 void execute();
 void memory();
 void writeBack();
+void shadowShift();
+void printPipe();
 #endif

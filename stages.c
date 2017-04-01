@@ -1,62 +1,61 @@
 #include"stages.h"
 #include<stdio.h>
 
+// Input: PC, iMem
+// Output: sFD
+void fetch(){
+    // get instruction from iMem
+    sFD->MI = iMem[*PC];
+}
 
+// Input: FD
+// Output: sDE
 void decode(){
     // opcode 
-    DE->op = (uint8_t) FD->MI >> 26;
+    sDE->op = (uint8_t) FD->MI >> 26;
 
     // R-type
-    if( DE->op == 0){
-        DE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
-        DE->rt = (uint8_t) (FD->MI >> 16) & 0x1f;
-        DE->rd = (uint8_t) (FD->MI >> 11) & 0x1f;
-        DE->shamt = (uint8_t) (FD->MI >> 6) & 0x1f;
-        DE->funct = (uint8_t) FD->MI  & 0x3f;
-        DE->immed = (uint32_t) 0;
-        DE->addrs = (uint32_t) 0;
-        DE->MI = (uint32_t) 0;
-        DE->WD = (uint32_t) 0;
-        DE->ALU_result = (uint32_t) 0;
-        DE->ALU_zero = (uint32_t) 0;
+    if( sDE->op == 0){
+        sDE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
+        sDE->rt = (uint8_t) (FD->MI >> 16) & 0x1f;
+        sDE->rd = (uint8_t) (FD->MI >> 11) & 0x1f;
+        sDE->shamt = (uint8_t) (FD->MI >> 6) & 0x1f;
+        sDE->funct = (uint8_t) FD->MI  & 0x3f;
+        sDE->immed = (uint32_t) 0;
+        sDE->addrs = (uint32_t) 0;
+        sDE->MI = (uint32_t) 0;
+        sDE->WD = (uint32_t) 0;
+        sDE->ALU_result = (uint32_t) 0;
+        sDE->ALU_zero = (uint32_t) 0;
         // set RD1 and RD2
-        DE->RD1 = regFile[DE->rs];
-        DE->RD2 = regFile[DE->rt];
+        sDE->RD1 = regFile[sDE->rs];
+        sDE->RD2 = regFile[sDE->rt];
         // set ALUsrc and ALUop based on instruction
-        if(DE->funct == 0x25){
+        if(sDE->funct == 0x25){
             //or
-            DE->CTRL.ALUsrc = 0;
-            DE->CTRL.ALUop = 0x01;
-        }else if( DE->funct == 0x20){
+            sDE->CTRL.ALUsrc = 0;
+            sDE->CTRL.ALUop = 0x01;
+        }else if( sDE->funct == 0x20){
             // and
-            DE->CTRL.ALUsrc = 0;
-            DE->CTRL.ALUop = 0x02;
+            sDE->CTRL.ALUsrc = 0;
+            sDE->CTRL.ALUop = 0x02;
         }
     }else{
         // rs 
-        DE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
+        sDE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
         // rt
-        DE->rt = (uint8_t) (FD->MI >> 16) & 0x1f;
+        sDE->rt = (uint8_t) (FD->MI >> 16) & 0x1f;
         // immed
-        DE->immed = (uint32_t) (FD->MI >> 16) & 0xFFFF;
-        DE->CTRL.ALUsrc = 1;
+        sDE->immed = (uint32_t) (FD->MI >> 16) & 0xFFFF;
+        sDE->CTRL.ALUsrc = 1;
     }
 
 
-    printf("DE->op: 0x%x\n", DE->op);
-    printf("DE->rs: 0x%x\n", DE->rs);
-    printf("DE->rt: 0x%x\n", DE->rt);
-    printf("DE->rd: 0x%x\n", DE->rd);
-    printf("DE->shamt: 0x%x\n", DE->shamt);
-    printf("DE->funct: 0x%x\n", DE->funct);
-    printf("DE->RD1: 0x%x\n", DE->RD1);
-    printf("DE->RD2: 0x%x\n", DE->RD2);
 }
 
 // input: DE
 // output: sEM
 void execute(){
-    printf("start of execute\n");
     // determine ALU values
     uint32_t ALU1 = DE->RD1;
     uint32_t ALU2;
@@ -67,7 +66,9 @@ void execute(){
     // determine ALU operation
     switch(DE->CTRL.ALUop){
         case 0x01:
-            printf("ALUop is 0x01\n");
+            printf("ALUop is 0x01: or instruction\n");
+            sEM->ALU_result = ALU1 | ALU2;
+            sEM->ALU_zero = 0;
             break;
         case 0x02:
             printf("ALUop is 0x02\n");
@@ -75,3 +76,143 @@ void execute(){
     }
 }
 
+// shift each shadow register to its pipeline reg
+void shadowShift(){
+    // FD
+    FD->PC          = sFD->PC;
+    FD->op          = sFD->op;
+    FD->rs          = sFD->rs;
+    FD->rt          = sFD->rt;
+    FD->rd          = sFD->rd;
+    FD->shamt       = sFD->shamt;
+    FD->funct       = sFD->funct;
+    FD->immed       = sFD->immed;
+    FD->addrs       = sFD->addrs;
+    FD->MI          = sFD->MI;
+    FD->RD1         = sFD->RD1;
+    FD->RD2         = sFD->RD2;
+    FD->WD          = sFD->WD;
+    FD->ALU_result  = sFD->ALU_result;
+    FD->ALU_zero    = sFD->ALU_zero;
+    FD->CTRL        = sFD->CTRL;
+    // DE 
+    DE->PC          = sDE->PC;
+    DE->op          = sDE->op;
+    DE->rs          = sDE->rs;
+    DE->rt          = sDE->rt;
+    DE->rd          = sDE->rd;
+    DE->shamt       = sDE->shamt;
+    DE->funct       = sDE->funct;
+    DE->immed       = sDE->immed;
+    DE->addrs       = sDE->addrs;
+    DE->MI          = sDE->MI;
+    DE->RD1         = sDE->RD1;
+    DE->RD2         = sDE->RD2;
+    DE->WD          = sDE->WD;
+    DE->ALU_result  = sDE->ALU_result;
+    DE->ALU_zero    = sDE->ALU_zero;
+    DE->CTRL        = sDE->CTRL;
+    // EM 
+    EM->PC          = sEM->PC;
+    EM->op          = sEM->op;
+    EM->rs          = sEM->rs;
+    EM->rt          = sEM->rt;
+    EM->rd          = sEM->rd;
+    EM->shamt       = sEM->shamt;
+    EM->funct       = sEM->funct;
+    EM->immed       = sEM->immed;
+    EM->addrs       = sEM->addrs;
+    EM->MI          = sEM->MI;
+    EM->RD1         = sEM->RD1;
+    EM->RD2         = sEM->RD2;
+    EM->WD          = sEM->WD;
+    EM->ALU_result  = sEM->ALU_result;
+    EM->ALU_zero    = sEM->ALU_zero;
+    EM->CTRL        = sEM->CTRL;
+    // MW 
+    MW->PC          = sMW->PC;
+    MW->op          = sMW->op;
+    MW->rs          = sMW->rs;
+    MW->rt          = sMW->rt;
+    MW->rd          = sMW->rd;
+    MW->shamt       = sMW->shamt;
+    MW->funct       = sMW->funct;
+    MW->immed       = sMW->immed;
+    MW->addrs       = sMW->addrs;
+    MW->MI          = sMW->MI;
+    MW->RD1         = sMW->RD1;
+    MW->RD2         = sMW->RD2;
+    MW->WD          = sMW->WD;
+    MW->ALU_result  = sMW->ALU_result;
+    MW->ALU_zero    = sMW->ALU_zero;
+    MW->CTRL        = sMW->CTRL;
+}
+
+void printPipe(){
+    printf("---------- Print Pipe ----------\n");
+    // FD
+    printf("FD->PC: 0x%x\n",          FD->PC);
+    printf("FD->op: 0x%x\n",          FD->op);
+    printf("FD->rs: 0x%x\n",          FD->rs);
+    printf("FD->rt: 0x%x\n",          FD->rt);
+    printf("FD->rd: 0x%x\n",          FD->rd);
+    printf("FD->shamt: 0x%x\n",       FD->shamt);
+    printf("FD->funct: 0x%x\n",       FD->funct);
+    printf("FD->immed: 0x%x\n",       FD->immed);
+    printf("FD->addrs: 0x%x\n",       FD->addrs);
+    printf("FD->MI: 0x%x\n",          FD->MI);
+    printf("FD->RD1: 0x%x\n",         FD->RD1);
+    printf("FD->RD2: 0x%x\n",         FD->RD2);
+    printf("FD->WD: 0x%x\n",          FD->WD);
+    printf("FD->ALU_result: 0x%x\n",  FD->WD);
+    printf("FD->ALU_zero: 0x%x\n",    FD->WD);
+    // DE
+    printf("DE->PC: 0x%x\n",          DE->PC);
+    printf("DE->op: 0x%x\n",          DE->op);
+    printf("DE->rs: 0x%x\n",          DE->rs);
+    printf("DE->rt: 0x%x\n",          DE->rt);
+    printf("DE->rd: 0x%x\n",          DE->rd);
+    printf("DE->shamt: 0x%x\n",       DE->shamt);
+    printf("DE->funct: 0x%x\n",       DE->funct);
+    printf("DE->immed: 0x%x\n",       DE->immed);
+    printf("DE->addrs: 0x%x\n",       DE->addrs);
+    printf("DE->MI: 0x%x\n",          DE->MI);
+    printf("DE->RD1: 0x%x\n",         DE->RD1);
+    printf("DE->RD2: 0x%x\n",         DE->RD2);
+    printf("DE->WD: 0x%x\n",          DE->WD);
+    printf("DE->ALU_result: 0x%x\n",  DE->WD);
+    printf("DE->ALU_zero: 0x%x\n",    DE->WD);
+    // EM
+    printf("EM->PC: 0x%x\n",          EM->PC);
+    printf("EM->op: 0x%x\n",          EM->op);
+    printf("EM->rs: 0x%x\n",          EM->rs);
+    printf("EM->rt: 0x%x\n",          EM->rt);
+    printf("EM->rd: 0x%x\n",          EM->rd);
+    printf("EM->shamt: 0x%x\n",       EM->shamt);
+    printf("EM->funct: 0x%x\n",       EM->funct);
+    printf("EM->immed: 0x%x\n",       EM->immed);
+    printf("EM->addrs: 0x%x\n",       EM->addrs);
+    printf("EM->MI: 0x%x\n",          EM->MI);
+    printf("EM->RD1: 0x%x\n",         EM->RD1);
+    printf("EM->RD2: 0x%x\n",         EM->RD2);
+    printf("EM->WD: 0x%x\n",          EM->WD);
+    printf("EM->ALU_result: 0x%x\n",  EM->WD);
+    printf("EM->ALU_zero: 0x%x\n",    EM->WD);
+    // MW
+    printf("MW->PC: 0x%x\n",          MW->PC);
+    printf("MW->op: 0x%x\n",          MW->op);
+    printf("MW->rs: 0x%x\n",          MW->rs);
+    printf("MW->rt: 0x%x\n",          MW->rt);
+    printf("MW->rd: 0x%x\n",          MW->rd);
+    printf("MW->shamt: 0x%x\n",       MW->shamt);
+    printf("MW->funct: 0x%x\n",       MW->funct);
+    printf("MW->immed: 0x%x\n",       MW->immed);
+    printf("MW->addrs: 0x%x\n",       MW->addrs);
+    printf("MW->MI: 0x%x\n",          MW->MI);
+    printf("MW->RD1: 0x%x\n",         MW->RD1);
+    printf("MW->RD2: 0x%x\n",         MW->RD2);
+    printf("MW->WD: 0x%x\n",          MW->WD);
+    printf("MW->ALU_result: 0x%x\n",  MW->WD);
+    printf("MW->ALU_zero: 0x%x\n",    MW->WD);
+    printf("--------------------------------\n");
+}
