@@ -20,15 +20,25 @@ int main (){
     printPipe();
     fetch();
     shadowShift();
+    
     printf("BEFORE DECODE\n");
     printPipe();
     decode();
     shadowShift();
+
     printf("BEFORE EX\n");
     printPipe();
     execute();
-    //memory(EM, sMW);
-    //writeback();
+    shadowShift();
+
+    printf("BEFORE MEM\n");
+    printPipe();
+    memory();
+    shadowShift();
+
+    printf("BEFORE WB\n");
+    printPipe();
+    writeBack();
 
     //clear heap memory
     freeStructs();
