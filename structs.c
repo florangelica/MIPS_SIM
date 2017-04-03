@@ -8,6 +8,7 @@ void initStructs(){
     iMem = malloc(MEM_SIZE*sizeof(uint32_t));
     dMem = malloc(MEM_SIZE*sizeof(uint32_t));
     PC = malloc(sizeof(uint32_t));
+    CLK = malloc(sizeof(uint32_t));
     FD = malloc(sizeof(struct PIPE));
     DE= malloc(sizeof(struct PIPE));
     EM= malloc(sizeof(struct PIPE));

@@ -6,6 +6,7 @@
 void fetch(){
     // get instruction from iMem
     sFD->MI = iMem[*PC];
+    *PC = *PC + 1;
 }
 
 // Input: FD
@@ -45,6 +46,14 @@ void decode(){
             // and
             sDE->CTRL.ALUsrc     = 0;
             sDE->CTRL.ALUop      = 0x02;
+        }else{
+            sDE->CTRL.ALUsrc     = 0;
+            sDE->CTRL.ALUop      = 0x00;
+            sDE->CTRL.RegDst     = 0;
+            sDE->CTRL.MemWrite   = 0;
+            sDE->CTRL.MemRead    = 0;
+            sDE->CTRL.MemtoReg   = 0;
+            sDE->CTRL.RegWrite   = 0;
         }
     }else{
         // rs 
