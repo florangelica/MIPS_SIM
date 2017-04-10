@@ -1,4 +1,5 @@
 #include"stages.h"
+#include"instDef.h"
 #include<stdio.h>
 
 // Input: PC, iMem
@@ -31,30 +32,18 @@ void decode(){
         // set RD1 and RD2
         sDE->RD1 = regFile[sDE->rs];
         sDE->RD2 = regFile[sDE->rt];
-
-        // set control lines 
-        if(sDE->funct == 0x25){
-            //or
-            sDE->CTRL.ALUsrc     = 0;
-            sDE->CTRL.ALUop      = 0x01;
-            sDE->CTRL.RegDst     = 1;
-            sDE->CTRL.MemWrite   = 0;
-            sDE->CTRL.MemRead    = 0;
-            sDE->CTRL.MemtoReg   = 0;
-            sDE->CTRL.RegWrite   = 1;
-        }else if( sDE->funct == 0x20){
-            // and
-            sDE->CTRL.ALUsrc     = 0;
-            sDE->CTRL.ALUop      = 0x02;
-        }else{
-            sDE->CTRL.ALUsrc     = 0;
-            sDE->CTRL.ALUop      = 0x00;
-            sDE->CTRL.RegDst     = 0;
-            sDE->CTRL.MemWrite   = 0;
-            sDE->CTRL.MemRead    = 0;
-            sDE->CTRL.MemtoReg   = 0;
-            sDE->CTRL.RegWrite   = 0;
-        }
+        // set control lines
+        sDE->CTRL.RegDst     = 1;
+        sDE->CTRL.MemWrite   = 0;
+        sDE->CTRL.MemRead    = 0;
+        sDE->CTRL.MemtoReg   = 0;
+        sDE->CTRL.RegWrite   = 1;              i
+        sDE->CTRL.ALUsrc     = 0;
+        // Set ALU Control
+    }else if((sDE->op == J) || (sDE->op == JAL) ){
+        // set target 
+        sDE->addrs = (uint32_t) FD->MI & 0x03fffffff;
+        // set control lines
     }else{
         // rs 
         sDE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
@@ -62,7 +51,17 @@ void decode(){
         sDE->rt = (uint8_t) (FD->MI >> 16) & 0x1f;
         // immed
         sDE->immed = (uint32_t) (FD->MI >> 16) & 0xFFFF;
-        sDE->CTRL.ALUsrc = 1;
+
+        // set control lines
+        if(sDE->op == 0x23){ 
+            sDE->CTRL.RegDst     = 0;
+            sDE->CTRL.MemWrite   = 0;
+            sDE->CTRL.MemRead    = 0;
+            sDE->CTRL.MemtoReg   = 0;
+            sDE->CTRL.RegWrite   = 0;              
+            sDE->CTRL.ALUsrc     = 0;
+        }
+        // set ALU Control
     }
 
 
