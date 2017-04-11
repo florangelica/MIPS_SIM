@@ -37,7 +37,7 @@ void decode(){
         sDE->CTRL.MemWrite   = 0;
         sDE->CTRL.MemRead    = 0;
         sDE->CTRL.MemtoReg   = 0;
-        sDE->CTRL.RegWrite   = 1;              i
+        sDE->CTRL.RegWrite   = 1;
         sDE->CTRL.ALUsrc     = 0;
         // Set ALU Control
     }else if((sDE->op == J) || (sDE->op == JAL) ){
@@ -63,8 +63,6 @@ void decode(){
         }
         // set ALU Control
     }
-
-
 }
 
 // input: DE

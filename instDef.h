@@ -52,3 +52,4 @@
 // * note JR is interpreted as an R TYPE
 #define J       0x02 //0b000010
 #define JAL     0x03 //0b000011
+#endif
