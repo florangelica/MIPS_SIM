@@ -30,38 +30,67 @@ void decode(){
         sDE->ALU_result = (uint32_t) 0;
         sDE->ALU_zero = (uint32_t) 0;
         // set RD1 and RD2
-        sDE->RD1 = regFile[sDE->rs];
-        sDE->RD2 = regFile[sDE->rt];
+        sDE->RD1 = (uint32_t) regFile[sDE->rs];
+        sDE->RD2 = (uint32_t) regFile[sDE->rt];
         // set control lines
-        sDE->CTRL.RegDst     = 1;
-        sDE->CTRL.MemWrite   = 0;
-        sDE->CTRL.MemRead    = 0;
-        sDE->CTRL.MemtoReg   = 0;
-        sDE->CTRL.RegWrite   = 1;
-        sDE->CTRL.ALUsrc     = 0;
+        sDE->CTRL.RegDst     = (uint8_t) 1;
+        sDE->CTRL.MemWrite   = (uint8_t) 0;
+        sDE->CTRL.MemRead    = (uint8_t) 0;
+        sDE->CTRL.MemtoReg   = (uint8_t) 0;
+        sDE->CTRL.RegWrite   = (uint8_t) 1;
+        sDE->CTRL.ALUsrc     = (uint8_t) 0;
         // Set ALU Control
     }else if((sDE->op == J) || (sDE->op == JAL) ){
         // set target 
         sDE->addrs = (uint32_t) FD->MI & 0x03fffffff;
+        //set other fields to 0
+        sDE->rs = (uint8_t) 0;
+        sDE->rt = (uint8_t) 0;
+        sDE->rd = (uint8_t) 0;
+        sDE->shamt = (uint8_t) 0;
+        sDE->funct = (uint8_t) 0; 
+        sDE->immed = (uint32_t) 0;
+        sDE->WD = (uint32_t) 0;
+        sDE->ALU_result = (uint32_t) 0;
+        sDE->ALU_zero = (uint32_t) 0;
         // set control lines
-    }else{
+        sDE->CTRL.PCsrc      = (uint8_t) 0;
+        sDE->CTRL.RegDst     = (uint8_t) 1; // make destination rd
+        sDE->CTRL.MemWrite   = (uint8_t) 0;
+        sDE->CTRL.MemRead    = (uint8_t) 0;
+        sDE->CTRL.MemtoReg   = (uint8_t) 0;
+        sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
+        sDE->CTRL.ALUsrc     = (uint8_t) 0;
+    }else{ // I TYPE
         // rs 
         sDE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
         // rt
         sDE->rt = (uint8_t) (FD->MI >> 16) & 0x1f;
         // immed
         sDE->immed = (uint32_t) (FD->MI >> 16) & 0xFFFF;
+        // set extra fields to 0
+        sDE->rd = (uint8_t) 0;
+        sDE->shamt = (uint8_t) 0;
+        sDE->funct = (uint8_t) 0;
+        sDE->addrs = (uint32_t) 0;
+        sDE->WD = (uint32_t) 0;
+        sDE->ALU_result = (uint32_t) 0;
+        sDE->ALU_zero = (uint32_t) 0;
 
         // set control lines
-        if(sDE->op == 0x23){ 
-            sDE->CTRL.RegDst     = 0;
-            sDE->CTRL.MemWrite   = 0;
-            sDE->CTRL.MemRead    = 0;
-            sDE->CTRL.MemtoReg   = 0;
-            sDE->CTRL.RegWrite   = 0;              
-            sDE->CTRL.ALUsrc     = 0;
-        }
-        // set ALU Control
+        sDE->CTRL.PCsrc      = (uint8_t) 0;
+        sDE->CTRL.RegDst     = (uint8_t) 0;
+        if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
+            sDE->CTRL.MemWrite   = (uint8_t) 1;
+        }else DE->CTRL.MemWrite  = (uint8_t) 0;
+        if(sDE->op == LW){
+          sDE->CTRL.MemRead  = (uint8_t) 1;
+        }else sDE->CTRL.MemRead  = (uint8_t) 0;
+        sDE->CTRL.MemtoReg   = (uint8_t) 0;
+        if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
+            sDE->CTRL.RegWrite   = (uint8_t) 0;
+        }else DE->CTRL.RegWrite  = (uint8_t) 1;
+        sDE->CTRL.ALUsrc     = (uint8_t) 1;
     }
 }
 
