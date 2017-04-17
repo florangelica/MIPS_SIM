@@ -15,7 +15,8 @@ int main (){
     iMem[0] = OR_INST;
     regFile[0x11] = 0xDEAD;
     regFile[0x12] = 0xBEEF;
-
+    hazards();
+/*
     while(*CLK < 6){
         fetch();
         decode();
@@ -28,32 +29,7 @@ int main (){
         printPipe();
         *CLK = *CLK + 1;
     }
-/*
-    // Test stages with or instruction
-    printf("BEFORE FETCH\n");
-    printPipe();
-    fetch();
-    shadowShift();
-    
-    printf("BEFORE DECODE\n");
-    printPipe();
-    decode();
-    shadowShift();
-
-    printf("BEFORE EX\n");
-    printPipe();
-    execute();
-    shadowShift();
-
-    printf("BEFORE MEM\n");
-    printPipe();
-    memory();
-    shadowShift();
-
-    printf("BEFORE WB\n");
-    printPipe();
-    writeBack();
-*/
+    */
     //clear heap memory
     freeStructs();
     return 0;
