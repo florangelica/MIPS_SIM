@@ -29,6 +29,11 @@ struct CONTROL{
     uint8_t MemWrite: 1;
     // 0: WD = ALU output        1: WD = from data mem
     uint8_t MemtoReg: 1;
+    // 0: Not a Branch           1: Branch Instruciton
+    uint8_t Branch: 1;
+    // 0: Not a Jump             1: Jump Instruciton
+    uint8_t Jump: 1;
+
 };
 
 struct PIPE{

@@ -16,6 +16,16 @@ void decode(){
     // opcode 
     sDE->MI = FD->MI;
     sDE->op = (uint8_t) FD->MI >> 26;
+    // Initialize control lines to 0
+    sDE->CTRL.PCsrc      = (uint8_t) 0;
+    sDE->CTRL.RegDst     = (uint8_t) 0;
+    sDE->CTRL.MemWrite   = (uint8_t) 0;
+    sDE->CTRL.MemRead    = (uint8_t) 0;
+    sDE->CTRL.MemtoReg   = (uint8_t) 0;
+    sDE->CTRL.RegWrite   = (uint8_t) 0;
+    sDE->CTRL.ALUsrc     = (uint8_t) 0;
+    sDE->CTRL.Branch     = (uint8_t) 0;
+    sDE->CTRL.Jump       = (uint8_t) 0;
 
     // R-type
     if( sDE->op == 0){
@@ -33,14 +43,10 @@ void decode(){
         sDE->RD1 = (uint32_t) regFile[sDE->rs];
         sDE->RD2 = (uint32_t) regFile[sDE->rt];
         // set control lines
-        sDE->CTRL.PCsrc      = (uint8_t) 0;
         sDE->CTRL.RegDst     = (uint8_t) 1;
-        sDE->CTRL.MemWrite   = (uint8_t) 0;
-        sDE->CTRL.MemRead    = (uint8_t) 0;
-        sDE->CTRL.MemtoReg   = (uint8_t) 0;
         sDE->CTRL.RegWrite   = (uint8_t) 1;
-        sDE->CTRL.ALUsrc     = (uint8_t) 0;
-        // Set ALU Control
+
+    // J TYPE
     }else if((sDE->op == J) || (sDE->op == JAL) ){
         // set target 
         sDE->addrs = (uint32_t) FD->MI & 0x03fffffff;
@@ -55,14 +61,11 @@ void decode(){
         sDE->ALU_result = (uint32_t) 0;
         sDE->ALU_zero = (uint32_t) 0;
         // set control lines
-        sDE->CTRL.PCsrc      =  (uint8_t) 0;
+        sDE->CTRL.Jump       = (uint8_t) 1; // Jump instruction
         sDE->CTRL.RegDst     = (uint8_t) 1; // make destination rd
-        sDE->CTRL.MemWrite   = (uint8_t) 0;
-        sDE->CTRL.MemRead    = (uint8_t) 0;
-        sDE->CTRL.MemtoReg   = (uint8_t) 0;
         sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
-        sDE->CTRL.ALUsrc     = (uint8_t) 0;
-    }else{ // I TYPE
+    //I TYPE
+    }else{
         // rs 
         sDE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
         // rt
@@ -79,23 +82,17 @@ void decode(){
         sDE->ALU_zero = (uint32_t) 0;
 
         // set control lines
-        sDE->CTRL.PCsrc          = (uint8_t) 0;
-        sDE->CTRL.RegDst         = (uint8_t) 0;  // make destination rt
         if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
             sDE->CTRL.MemWrite   = (uint8_t) 1;  // write to memory for stores
-        }else DE->CTRL.MemWrite  = (uint8_t) 0;:w
-          
+        }else sDE->CTRL.RegWrite = (uint8_t) 1;  // else write a register
         if(sDE->op == LW){
-          sDE->CTRL.MemtoReg     = (uint8_t) 1;
+          sDE->CTRL.MemtoReg     = (uint8_t) 1;  // if a load write memory to register
           sDE->CTRL.MemRead      = (uint8_t) 1;  // read memory for loads
-        }else{
-          sDE->CTRL.MemtoReg     = (uint8_t) 0;
-          sDE->CTRL.MemRead      = (uint8_t) 0;
         }
-        if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
-            sDE->CTRL.RegWrite   = (uint8_t) 0;
-        }else DE->CTRL.RegWrite  = (uint8_t) 1;
-        sDE->CTRL.ALUsrc         = (uint8_t) 1;
+        sDE->CTRL.ALUsrc         = (uint8_t) 1;  // Get immediate field
+        if((sDE->op == BEQ)||(sDE->op == BGTZ)||(sDE->op == BLEZ)||(sDE->op == BLTZ)||(sDE->op == BNE)){
+            sDE->CTRL.Branch     = (uint8_t) 1;  // Branch instruction
+        }
     }
 }
 
