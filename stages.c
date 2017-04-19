@@ -2,12 +2,34 @@
 #include"instDef.h"
 #include<stdio.h>
 
+#define FORWARD 0
 // Input: PC, iMem
 // Output: sFD
 void fetch(){
     // get instruction from iMem
     sFD->MI = iMem[*PC];
     *PC = *PC + 1;
+}
+
+
+void hazards(){
+#if FORWARD
+    printf("forwarding enabled\n");
+    // local control lines
+    uint16_t forwardA=0x00;
+    uint16_t forwardB=0x00;
+
+    // set forwarding control lines
+    // EX hazard
+    if( (EM->CTRL.RegWrite == 1) && !(EM->rd) && (EM->rd == sDE->rs) )forwardA = 0x10;
+    if( (EM->CTRL.RegWrite == 1) && !(EM->rd) && (EM->rd == sDE->rt) )forwardB = 0x10;
+    // MEM hazard
+    if( (MW->CTRL.RegWrite == 1) && !(MW->rd) && (MW->rd == sDE->rs) && !(EM->CTRL.RegWrite && !(EM->rd==0) && !(EM->rd == sDE->rs)) )forwardA = 0x01;
+    if( (MW->CTRL.RegWrite == 1) && !(MW->rd) && (MW->rd == sDE->rt) && !(EM->CTRL.RegWrite && !(EM->rd==0) && !(EM->rd == sDE->rt)))forwardB = 0x01;
+    // use control lines to forward values
+#else
+    printf("forwarding disabled\n");
+#endif
 }
 
 // Input: FD
