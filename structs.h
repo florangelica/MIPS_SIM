@@ -72,4 +72,3 @@ struct PIPE *sMW;
 void initStructs();
 void freeStructs();
 #endif
-

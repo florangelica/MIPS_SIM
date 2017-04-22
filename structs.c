@@ -33,4 +33,6 @@ void freeStructs(){
     free(sDE);
     free(sEM);
     free(sMW);
+
 }
+

@@ -1,8 +1,9 @@
-#include"stages.h"
-#include"instDef.h"
+#include"structs.h"
 #include<stdio.h>
-
+#include"instDef.h"
+#include"stages.h"
 #define FORWARD 0
+
 // Input: PC, iMem
 // Output: sFD
 void fetch(){
@@ -39,16 +40,7 @@ void decode(){
     sDE->MI = FD->MI;
     sDE->op = (uint8_t) FD->MI >> 26;
     // Initialize control lines to 0
-    sDE->CTRL.PCsrc      = (uint8_t) 0;
-    sDE->CTRL.RegDst     = (uint8_t) 0;
-    sDE->CTRL.MemWrite   = (uint8_t) 0;
-    sDE->CTRL.MemRead    = (uint8_t) 0;
-    sDE->CTRL.MemtoReg   = (uint8_t) 0;
-    sDE->CTRL.RegWrite   = (uint8_t) 0;
-    sDE->CTRL.ALUsrc     = (uint8_t) 0;
-    sDE->CTRL.Branch     = (uint8_t) 0;
-    sDE->CTRL.Jump       = (uint8_t) 0;
-
+    clearPipe(sDE);
     // R-type
     if( sDE->op == 0){
         sDE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
@@ -369,3 +361,33 @@ void printPipe(){
     printf("MW->ALU_zero: 0x%x\n",    MW->ALU_zero);
     printf("--------------------------------\n");
 }
+void clearPipe(struct PIPE *pipe){
+    pipe->PC          = 0;
+    pipe->op          = 0;
+    pipe->rs          = 0;
+    pipe->rt          = 0;
+    pipe->rd          = 0;
+    pipe->shamt       = 0;
+    pipe->funct       = 0;
+    pipe->immed       = 0;
+    pipe->addrs       = 0;
+    pipe->MI          = 0;
+    pipe->RD1         = 0;
+    pipe->RD2         = 0;
+    pipe->WD          = 0;
+    pipe->ALU_result  = 0;
+    pipe->ALU_zero    = 0;
+}
+void clearCTRL(struct PIPE *pipe){
+    pipe->CTRL.PCsrc     = 0;
+    pipe->CTRL.ALUsrc    = 0;
+    pipe->CTRL.ALUop     = 0;
+    pipe->CTRL.RegDst    = 0;
+    pipe->CTRL.RegWrite  = 0;
+    pipe->CTRL.MemRead   = 0;
+    pipe->CTRL.MemWrite  = 0;
+    pipe->CTRL.MemtoReg  = 0;
+    pipe->CTRL.Branch    = 0;
+    pipe->CTRL.Jump      = 0;
+}
+

@@ -11,4 +11,8 @@ void memory();
 void writeBack();
 void shadowShift();
 void printPipe();
+void clearPipe();
+void clearCTRL();
+void hazards();
+
 #endif
