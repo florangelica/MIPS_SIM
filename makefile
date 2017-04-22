@@ -1,6 +1,6 @@
 CC = gcc
-FILES = main.c  stages.c structs.c
-OBJECTS = main.o stages.o structs.o
+FILES = main.c  stages.c structs.c cache.c
+OBJECTS = main.o stages.o structs.o cache.o
 
 main.run: $(OBJECTS)
 	$(CC) -Llib $(OBJECTS) -lm

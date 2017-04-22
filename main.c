@@ -3,11 +3,13 @@
 #include<stdlib.h>
 #include"stages.h"
 #include"structs.h"
+#include"cache.h"
 
 
 int main (){
     // heap structs
     initStructs();
+    initCache();
 
     // init values
     *PC = 0;
@@ -15,7 +17,8 @@ int main (){
     iMem[0] = OR_INST;
     regFile[0x11] = 0xDEAD;
     regFile[0x12] = 0xBEEF;
-    hazards();
+    //hazards();
+
 /*
     while(*CLK < 6){
         fetch();
