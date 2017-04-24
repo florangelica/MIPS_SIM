@@ -9,6 +9,8 @@
 void fetch(){
     // get instruction from iMem
     sFD->MI = iMem[*PC];
+    printf("sFD->MI: 0x%x\n", sFD->MI);
+    sFD->PC =*PC;
     *PC = *PC + 1;
 }
 
@@ -36,77 +38,60 @@ void hazards(){
 // Input: FD
 // Output: sDE
 void decode(){
-    // opcode 
-    sDE->MI = FD->MI;
-    sDE->op = (uint8_t) FD->MI >> 26;
-    // Initialize control lines to 0
+    // Start with clean pipe and control lines
     clearPipe(sDE);
+    clearCTRL(sDE);
+    // Pass Values
+    sDE->MI = FD->MI;
+    sDE->PC = FD->PC;
+    //Opcode field
+    sDE->op =(uint8_t) (FD->MI >> 26);
+    printf("sDE->op: 0x%x\n", sDE->op); 
     // R-type
     if( sDE->op == 0){
-        sDE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
-        sDE->rt = (uint8_t) (FD->MI >> 16) & 0x1f;
-        sDE->rd = (uint8_t) (FD->MI >> 11) & 0x1f;
-        sDE->shamt = (uint8_t) (FD->MI >> 6) & 0x1f;
-        sDE->funct = (uint8_t) FD->MI  & 0x3f;
-        sDE->immed = (uint32_t) 0;
-        sDE->addrs = (uint32_t) 0;
-        sDE->WD = (uint32_t) 0;
-        sDE->ALU_result = (uint32_t) 0;
-        sDE->ALU_zero = (uint32_t) 0;
+        sDE->rs = (uint8_t) ((FD->MI >> 21) & 0x1f);
+        sDE->rt = (uint8_t) ((FD->MI >> 16) & 0x1f);
+        sDE->rd = (uint8_t) ((FD->MI >> 11) & 0x1f);
+        sDE->shamt = (uint8_t) ((FD->MI >> 6) & 0x1f);
+        sDE->funct = (uint8_t) (FD->MI  & 0x3f);
         // set RD1 and RD2
         sDE->RD1 = (uint32_t) regFile[sDE->rs];
         sDE->RD2 = (uint32_t) regFile[sDE->rt];
         // set control lines
         sDE->CTRL.RegDst     = (uint8_t) 1;
         sDE->CTRL.RegWrite   = (uint8_t) 1;
-
+        printf("R-Type \n");
     // J TYPE
     }else if((sDE->op == J) || (sDE->op == JAL) ){
         // set target 
-        sDE->addrs = (uint32_t) FD->MI & 0x03fffffff;
-        //set other fields to 0
-        sDE->rs = (uint8_t) 0;
-        sDE->rt = (uint8_t) 0;
-        sDE->rd = (uint8_t) 0;
-        sDE->shamt = (uint8_t) 0;
-        sDE->funct = (uint8_t) 0; 
-        sDE->immed = (uint32_t) 0;
-        sDE->WD = (uint32_t) 0;
-        sDE->ALU_result = (uint32_t) 0;
-        sDE->ALU_zero = (uint32_t) 0;
+        sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
         // set control lines
         sDE->CTRL.Jump       = (uint8_t) 1; // Jump instruction
         sDE->CTRL.RegDst     = (uint8_t) 1; // make destination rd
         sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
+        printf("J-Type\n");
     //I TYPE
     }else{
         // rs 
-        sDE->rs = (uint8_t) (FD->MI >> 21) & 0x1f;
+        sDE->rs = (uint8_t) ((FD->MI >> 21) & 0x1f);
         // rt
-        sDE->rt = (uint8_t) (FD->MI >> 16) & 0x1f;
+        sDE->rt = (uint8_t) ((FD->MI >> 16) & 0x1f);
         // immed
-        sDE->immed = (uint32_t) (FD->MI >> 16) & 0xFFFF;
-        // set extra fields to 0
-        sDE->rd = (uint8_t) 0;
-        sDE->shamt = (uint8_t) 0;
-        sDE->funct = (uint8_t) 0;
-        sDE->addrs = (uint32_t) 0;
-        sDE->WD = (uint32_t) 0;
-        sDE->ALU_result = (uint32_t) 0;
-        sDE->ALU_zero = (uint32_t) 0;
+        sDE->immed = (uint32_t) ((FD->MI >> 16) & 0xFFFF);
 
         // set control lines
         if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
             sDE->CTRL.MemWrite   = (uint8_t) 1;  // write to memory for stores
         }else sDE->CTRL.RegWrite = (uint8_t) 1;  // else write a register
         if(sDE->op == LW){
-          sDE->CTRL.MemtoReg     = (uint8_t) 1;  // if a load write memory to register
-          sDE->CTRL.MemRead      = (uint8_t) 1;  // read memory for loads
+            sDE->CTRL.MemtoReg     = (uint8_t) 1;  // if a load write memory to register
+            sDE->CTRL.MemRead      = (uint8_t) 1;  // read memory for loads
         }
         sDE->CTRL.ALUsrc         = (uint8_t) 1;  // Get immediate field
         if((sDE->op == BEQ)||(sDE->op == BGTZ)||(sDE->op == BLEZ)||(sDE->op == BLTZ)||(sDE->op == BNE)){
             sDE->CTRL.Branch     = (uint8_t) 1;  // Branch instruction
         }
+        printf("I-Type\n");
     }
 }
 

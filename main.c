@@ -12,10 +12,15 @@ int main (){
     // init values
     *PC = 0;
     *CLK = 0;
-    iMem[0] = OR_INST;
+    iMem[0] = J_INST;
     regFile[0x11] = 0xDEAD;
     regFile[0x12] = 0xBEEF;
-    hazards();
+    fetch();
+    shadowShift();
+    decode();
+
+
+    // hazards();
 /*
     while(*CLK < 6){
         fetch();

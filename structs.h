@@ -8,10 +8,12 @@
 // add t0,s1,s2   =   0x02324020
 // op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
 #define ADD_INST 0x02324020 
-// or t0,s1,s2   =   0x02324025
+// or t0,s1,s2   =    0x02324025
 // op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100101)
 #define OR_INST 0x02324025
-
+// J target      =    0x08000064
+// op(000010)   target(00 0000 0000 0000 0000 0110 0100)
+#define J_INST 0x08000064
 struct CONTROL{
     // 0: next PC = PC +4        1: computed branch target 
     uint8_t PCsrc: 1;
