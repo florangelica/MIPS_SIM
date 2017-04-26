@@ -13,7 +13,10 @@
 #define OR_INST 0x02324025
 // J target      =    0x08000064
 // op(000010)   target(00 0000 0000 0000 0000 0110 0100)
-#define J_INST 0x08000064
+#define J_INST  0x8000064
+// lw t0, 0(t1)  =    0x8d280000
+// op(100011)   rs(01001)   rt(01000) immed(0000 0000 0000 0000)
+#define LW_INST 0x08d280000 
 struct CONTROL{
     // 0: next PC = PC +4        1: computed branch target 
     uint8_t PCsrc: 1;

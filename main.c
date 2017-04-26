@@ -12,13 +12,15 @@ int main (){
     // init values
     *PC = 0;
     *CLK = 0;
-    iMem[0] = J_INST;
+    iMem[0] = ADD_INST;
     regFile[0x11] = 0xDEAD;
     regFile[0x12] = 0xBEEF;
     fetch();
     shadowShift();
     decode();
-
+    shadowShift();
+    printPipe(DE);
+    printCTRL(DE);
 
     // hazards();
 /*

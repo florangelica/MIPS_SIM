@@ -27,7 +27,7 @@ void hazards(){
     if( (EM->CTRL.RegWrite == 1) && !(EM->rd) && (EM->rd == sDE->rs) )forwardA = 0x10;
     if( (EM->CTRL.RegWrite == 1) && !(EM->rd) && (EM->rd == sDE->rt) )forwardB = 0x10;
     // MEM hazard
-    if( (MW->CTRL.RegWrite == 1) && !(MW->rd) && (MW->rd == sDE->rs) && !(EM->CTRL.RegWrite && !(EM->rd==0) && !(EM->rd == sDE->rs)) )forwardA = 0x01;
+    if( (MW->CTRL.RegWrite == 1) && !(MW->rd) && (MW->rd == sDE->rs) && !(EM->CTRL.RegWrite && !(EM->rd==0) && !(EM->rd == sDE->rs)))forwardA = 0x01;
     if( (MW->CTRL.RegWrite == 1) && !(MW->rd) && (MW->rd == sDE->rt) && !(EM->CTRL.RegWrite && !(EM->rd==0) && !(EM->rd == sDE->rt)))forwardB = 0x01;
     // use control lines to forward values
 #else
@@ -46,7 +46,6 @@ void decode(){
     sDE->PC = FD->PC;
     //Opcode field
     sDE->op =(uint8_t) (FD->MI >> 26);
-    printf("sDE->op: 0x%x\n", sDE->op); 
     // R-type
     if( sDE->op == 0){
         sDE->rs = (uint8_t) ((FD->MI >> 21) & 0x1f);
@@ -60,14 +59,17 @@ void decode(){
         // set control lines
         sDE->CTRL.RegDst     = (uint8_t) 1;
         sDE->CTRL.RegWrite   = (uint8_t) 1;
+        if(sDE->op == JR){
+            SDE->CTRL.Jump   = (uint8_t) 1;
+        }
+        
         printf("R-Type \n");
     // J TYPE
     }else if((sDE->op == J) || (sDE->op == JAL) ){
         // set target 
         sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
         // set control lines
-        sDE->CTRL.Jump       = (uint8_t) 1; // Jump instruction
-        sDE->CTRL.RegDst     = (uint8_t) 1; // make destination rd
+
         sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
         printf("J-Type\n");
     //I TYPE
@@ -278,8 +280,40 @@ void shadowShift(){
     MW->CTRL        = sMW->CTRL;
 }
 
-void printPipe(){
+// PRINTING FUNCTIONS
+void printCTRL(struct PIPE *pipe){
+    printf("---------- Print Control ----------\n");
+    printf("PCsrc:    0x%x\n",    pipe->CTRL.PCsrc);
+    printf("ALUsrc:   0x%x\n",    pipe->CTRL.ALUsrc);
+    printf("ALUop:    0x%x\n",    pipe->CTRL.ALUop);
+    printf("RegDst:   0x%x\n",    pipe->CTRL.RegDst);
+    printf("RegWrite: 0x%x\n",    pipe->CTRL.RegWrite);
+    printf("MemRead:  0x%x\n",    pipe->CTRL.MemRead);
+    printf("MemWrite: 0x%x\n",    pipe->CTRL.MemWrite);
+    printf("MemtoReg: 0x%x\n",    pipe->CTRL.MemtoReg);
+    printf("Branch:   0x%x\n",    pipe->CTRL.Branch);
+    printf("Jump:     0x%x\n",    pipe->CTRL.Jump);
+}
+void printPipe(struct PIPE *pipe){
     printf("---------- Print Pipe ----------\n");
+    printf("PC: 0x%x\n",          pipe->PC);
+    printf("op: 0x%x\n",          pipe->op);
+    printf("rs: 0x%x\n",          pipe->rs);
+    printf("rt: 0x%x\n",          pipe->rt);
+    printf("rd: 0x%x\n",          pipe->rd);
+    printf("shamt: 0x%x\n",       pipe->shamt);
+    printf("funct: 0x%x\n",       pipe->funct);
+    printf("immed: 0x%x\n",       pipe->immed);
+    printf("addrs: 0x%x\n",       pipe->addrs);
+    printf("MI: 0x%x\n",          pipe->MI);
+    printf("RD1: 0x%x\n",         pipe->RD1);
+    printf("RD2: 0x%x\n",         pipe->RD2);
+    printf("WD: 0x%x\n",          pipe->WD);
+    printf("ALU_result: 0x%x\n",  pipe->ALU_result);
+    printf("ALU_zero: 0x%x\n",    pipe->ALU_zero);
+}
+void printPipeLine(){
+    printf("---------- Print Pipe Line ----------\n");
     // FD
     printf("FD->PC: 0x%x\n",          FD->PC);
     printf("FD->op: 0x%x\n",          FD->op);
