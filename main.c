@@ -12,7 +12,7 @@ int main (){
     // init values
     *PC = 0;
     *CLK = 0;
-    iMem[0] = ADD_INST;
+    iMem[0] = LW_INST;
     regFile[0x11] = 0xDEAD;
     regFile[0x12] = 0xBEEF;
     fetch();

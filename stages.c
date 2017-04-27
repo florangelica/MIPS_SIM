@@ -170,6 +170,8 @@ void memory(){
     sMW->CTRL.MemRead    = EM->CTRL.MemRead;
     sMW->CTRL.MemtoReg   = EM->CTRL.MemtoReg;
     sMW->CTRL.RegWrite   = EM->CTRL.RegWrite;
+    sEM->CTRL.Branch     = DE->CTRL.Branch;
+    sEM->CTRL.Jump       = DE->CTRL.Jump;
     //check control lines
     if( (EM->CTRL.MemWrite == 0) && (EM->CTRL.MemRead == 0)){
         // no data mem access
@@ -185,7 +187,6 @@ void memory(){
         printf("ERROR: Both MemWrite and MemRead asserted\n");
     }
 }
-
 
 void writeBack(){
     //check the control lines
