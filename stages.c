@@ -7,14 +7,15 @@
 // Input: PC, iMem
 // Output: sFD
 void fetch(){
+    // clean shadow register 
+    clearPipe(sFD);
+    clearCTRL(sFD);
     // get instruction from iMem
     sFD->MI = iMem[*PC];
     printf("sFD->MI: 0x%x\n", sFD->MI);
     sFD->PC =*PC;
     *PC = *PC + 1;
 }
-
-
 void hazards(){
 #if FORWARD
     printf("forwarding enabled\n");
@@ -34,66 +35,66 @@ void hazards(){
     printf("forwarding disabled\n");
 #endif
 }
-
 // Input: FD
 // Output: sDE
 void decode(){
-    // Start with clean pipe and control lines
+    // Clean shadow register
     clearPipe(sDE);
     clearCTRL(sDE);
     // Pass Values
     sDE->MI = FD->MI;
     sDE->PC = FD->PC;
-    //Opcode field
+    // Opcode field
     sDE->op =(uint8_t) (FD->MI >> 26);
+
     // R-type
     if( sDE->op == 0){
-        sDE->rs = (uint8_t) ((FD->MI >> 21) & 0x1f);
-        sDE->rt = (uint8_t) ((FD->MI >> 16) & 0x1f);
-        sDE->rd = (uint8_t) ((FD->MI >> 11) & 0x1f);
-        sDE->shamt = (uint8_t) ((FD->MI >> 6) & 0x1f);
-        sDE->funct = (uint8_t) (FD->MI  & 0x3f);
-        // set RD1 and RD2
-        sDE->RD1 = (uint32_t) regFile[sDE->rs];
-        sDE->RD2 = (uint32_t) regFile[sDE->rt];
-        // set control lines
+        printf("R-Type \n");
+        // ----- Set Control Lines -----
         sDE->CTRL.RegDst     = (uint8_t) 1;
         sDE->CTRL.RegWrite   = (uint8_t) 1;
         if(sDE->op == JR){
-            SDE->CTRL.Jump   = (uint8_t) 1;
+            sDE->CTRL.Jump   = (uint8_t) 1;
         }
+        // ----- Set Pipe Fields -----
+        sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
+        sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
+        sDE->rd    = (uint8_t) ((FD->MI >> 11) & 0x1f);
+        sDE->shamt = (uint8_t) ((FD->MI >> 6) & 0x1f);
+        sDE->funct = (uint8_t) (FD->MI  & 0x3f);
+        // set RD1 and RD2
+        sDE->RD1   = (uint32_t) regFile[sDE->rs];
+        sDE->RD2   = (uint32_t) regFile[sDE->rt];
         
-        printf("R-Type \n");
     // J TYPE
     }else if((sDE->op == J) || (sDE->op == JAL) ){
+        printf("J-Type\n");
+        // ----- Set Control Lines -----
+        sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
+        sDE->CTRL.Jump       = (uint8_t) 1;
+        // ----- Set Pipe Fields -----
         // set target 
         sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
-        // set control lines
 
-        sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
-        printf("J-Type\n");
     //I TYPE
     }else{
-        // rs 
-        sDE->rs = (uint8_t) ((FD->MI >> 21) & 0x1f);
-        // rt
-        sDE->rt = (uint8_t) ((FD->MI >> 16) & 0x1f);
-        // immed
-        sDE->immed = (uint32_t) ((FD->MI >> 16) & 0xFFFF);
-
-        // set control lines
+        printf("I-Type\n");
+        // ----- Set Control Lines -----
         if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
             sDE->CTRL.MemWrite   = (uint8_t) 1;  // write to memory for stores
         }else sDE->CTRL.RegWrite = (uint8_t) 1;  // else write a register
         if(sDE->op == LW){
-            sDE->CTRL.MemtoReg     = (uint8_t) 1;  // if a load write memory to register
-            sDE->CTRL.MemRead      = (uint8_t) 1;  // read memory for loads
+            sDE->CTRL.MemtoReg   = (uint8_t) 1;  // if a load write memory to register
+            sDE->CTRL.MemRead    = (uint8_t) 1;  // read memory for loads
         }
         sDE->CTRL.ALUsrc         = (uint8_t) 1;  // Get immediate field
         if((sDE->op == BEQ)||(sDE->op == BGTZ)||(sDE->op == BLEZ)||(sDE->op == BLTZ)||(sDE->op == BNE)){
             sDE->CTRL.Branch     = (uint8_t) 1;  // Branch instruction
         }
-        printf("I-Type\n");
+        // ----- Set Pipe Fields 
+        sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
+        sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
+        sDE->immed = (uint32_t) ((FD->MI >> 16) & 0xFFFF);
     }
 }
 
@@ -115,6 +116,7 @@ void execute(){
     sEM->ALU_result      = DE->ALU_result;
     sEM->ALU_zero        = DE->ALU_zero;
     // set control lines for next stage
+    sEM->CTRL.PCsrc      = DE->CTRL.PCsrc;
     sEM->CTRL.ALUsrc     = DE->CTRL.ALUsrc;
     sEM->CTRL.ALUop      = DE->CTRL.ALUop;
     sEM->CTRL.RegDst     = DE->CTRL.RegDst;
@@ -122,7 +124,8 @@ void execute(){
     sEM->CTRL.MemRead    = DE->CTRL.MemRead;
     sEM->CTRL.MemtoReg   = DE->CTRL.MemtoReg;
     sEM->CTRL.RegWrite   = DE->CTRL.RegWrite;
-
+    sEM->CTRL.Branch     = DE->CTRL.Branch;
+    sEM->CTRL.Jump       = DE->CTRL.Jump;
     // determine ALU values
     uint32_t ALU1 = DE->RD1;
     uint32_t ALU2;
