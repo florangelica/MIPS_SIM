@@ -42,20 +42,12 @@ void decode(){
     clearPipe(sDE);
     clearCTRL(sDE);
     // Pass Values
-    sDE->MI = FD->MI;
-    sDE->PC = FD->PC;
     // Opcode field
     sDE->op =(uint8_t) (FD->MI >> 26);
 
     // R-type
     if( sDE->op == 0){
         printf("R-Type \n");
-        // ----- Set Control Lines -----
-        sDE->CTRL.RegDst     = (uint8_t) 1;
-        sDE->CTRL.RegWrite   = (uint8_t) 1;
-        if(sDE->op == JR){
-            sDE->CTRL.Jump   = (uint8_t) 1;
-        }
         // ----- Set Pipe Fields -----
         sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
         sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
@@ -65,21 +57,34 @@ void decode(){
         // set RD1 and RD2
         sDE->RD1   = (uint32_t) regFile[sDE->rs];
         sDE->RD2   = (uint32_t) regFile[sDE->rt];
-        
+        // ----- Set Control Lines -----
+        sDE->CTRL.ALUop      = (uint8_t)sDE->op;
+        sDE->CTRL.RegDst     = (uint8_t) 1;
+        sDE->CTRL.RegWrite   = (uint8_t) 1;
+        if(sDE->op == JR){
+            sDE->CTRL.Jump   = (uint8_t) 1;
+        }
+
     // J TYPE
     }else if((sDE->op == J) || (sDE->op == JAL) ){
         printf("J-Type\n");
-        // ----- Set Control Lines -----
-        sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
-        sDE->CTRL.Jump       = (uint8_t) 1;
         // ----- Set Pipe Fields -----
         // set target 
         sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
+        // ----- Set Control Lines -----
+        sDE->CTRL.ALUop      = (uint8_t) sDE->funct;
+        sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
+        sDE->CTRL.Jump       = (uint8_t) 1;
 
     //I TYPE
     }else{
         printf("I-Type\n");
+        // ----- Set Pipe Fields 
+        sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
+        sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
+        sDE->immed = (uint32_t) ((FD->MI >> 16) & 0xFFFF);
         // ----- Set Control Lines -----
+        sDE->CTRL.ALUop          = (uint8_t) sDE->funct;
         if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
             sDE->CTRL.MemWrite   = (uint8_t) 1;  // write to memory for stores
         }else sDE->CTRL.RegWrite = (uint8_t) 1;  // else write a register
@@ -91,16 +96,14 @@ void decode(){
         if((sDE->op == BEQ)||(sDE->op == BGTZ)||(sDE->op == BLEZ)||(sDE->op == BLTZ)||(sDE->op == BNE)){
             sDE->CTRL.Branch     = (uint8_t) 1;  // Branch instruction
         }
-        // ----- Set Pipe Fields 
-        sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
-        sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
-        sDE->immed = (uint32_t) ((FD->MI >> 16) & 0xFFFF);
     }
 }
 
 // input: DE
 // output: sEM
 void execute(){
+    clearPipe(sEM);
+    clearCTRL(sEM);
     // forward pipeline values to next stage
     sEM->rs              = DE->rs;
     sEM->rt              = DE->rt;
@@ -132,10 +135,9 @@ void execute(){
     if(DE->CTRL.ALUsrc == 0){
         ALU2 = DE->RD2; 
     }else ALU2 = DE->immed;
-
     // determine ALU operation
     switch(DE->CTRL.ALUop){
-        case 0x01:
+        case OR:
             printf("ALUop is 0x01: or instruction\n");
             sEM->ALU_result = ALU1 | ALU2;
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
