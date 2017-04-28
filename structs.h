@@ -26,7 +26,7 @@ struct CONTROL{
     // 0: 2nd ALU operand = RD2  1: 2nd ALU Operand = 16-bit sign extnd immed val 
     uint8_t ALUsrc: 1; 
     // designates which operation the ALU is to execute
-    uint8_t ALUop: 8;
+    // uint8_t ALUop: 8;
     // 0: Destination reg = rt   1: Destination reg = rd 
     uint8_t RegDst: 1;
     // 0: NONE                   1: the WRITE REG is written to with WD

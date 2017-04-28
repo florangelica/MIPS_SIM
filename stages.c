@@ -51,14 +51,15 @@ void decode(){
         // ----- Set Pipe Fields -----
         sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
         sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
-        sDE->rd    = (uint8_t) ((FD->MI >> 11) & 0x1f);
+        if((sDE->op != SRL )&& (sDE->op != SLL)){
+          sDE->rd    = (uint8_t) ((FD->MI >> 11) & 0x1f);
+        }
         sDE->shamt = (uint8_t) ((FD->MI >> 6) & 0x1f);
         sDE->funct = (uint8_t) (FD->MI  & 0x3f);
         // set RD1 and RD2
         sDE->RD1   = (uint32_t) regFile[sDE->rs];
         sDE->RD2   = (uint32_t) regFile[sDE->rt];
         // ----- Set Control Lines -----
-        sDE->CTRL.ALUop      = (uint8_t)sDE->op;
         sDE->CTRL.RegDst     = (uint8_t) 1;
         sDE->CTRL.RegWrite   = (uint8_t) 1;
         if(sDE->op == JR){
@@ -72,7 +73,6 @@ void decode(){
         // set target 
         sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
         // ----- Set Control Lines -----
-        sDE->CTRL.ALUop      = (uint8_t) sDE->funct;
         sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
         sDE->CTRL.Jump       = (uint8_t) 1;
 
@@ -84,7 +84,6 @@ void decode(){
         sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
         sDE->immed = (uint32_t) ((FD->MI >> 16) & 0xFFFF);
         // ----- Set Control Lines -----
-        sDE->CTRL.ALUop          = (uint8_t) sDE->funct;
         if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
             sDE->CTRL.MemWrite   = (uint8_t) 1;  // write to memory for stores
         }else sDE->CTRL.RegWrite = (uint8_t) 1;  // else write a register
@@ -121,7 +120,6 @@ void execute(){
     // set control lines for next stage
     sEM->CTRL.PCsrc      = DE->CTRL.PCsrc;
     sEM->CTRL.ALUsrc     = DE->CTRL.ALUsrc;
-    sEM->CTRL.ALUop      = DE->CTRL.ALUop;
     sEM->CTRL.RegDst     = DE->CTRL.RegDst;
     sEM->CTRL.MemWrite   = DE->CTRL.MemWrite;
     sEM->CTRL.MemRead    = DE->CTRL.MemRead;
@@ -136,16 +134,77 @@ void execute(){
         ALU2 = DE->RD2; 
     }else ALU2 = DE->immed;
     // determine ALU operation
-    switch(DE->CTRL.ALUop){
-        case OR:
-            printf("ALUop is 0x01: or instruction\n");
+    if(DE->op == 0){ // R Type
+      switch(DE->funct){
+        case XOR:
+            printf("XOR Instruction\n");
+            sEM->ALU_result = ALU1 ^ ALU2;
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case ADD:
+            printf("ADD Instruction\n");
             sEM->ALU_result = ALU1 | ALU2;
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-            sEM->ALU_zero = 0;
             break;
-        case 0x02:
-            printf("ALUop is 0x02\n");
+        case ADDU:
+            printf("ADDU Instruction\n");
+            sEM->ALU_result = ALU1 + ALU2;
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
+        case AND:
+            printf("AND Instruction\n");
+            sEM->ALU_result = (ALU1 & ALU2);
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case NOR:
+            printf("NOR Instruction\n");
+            sEM->ALU_result = ~(ALU1 | ALU2);
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case OR:
+            printf("OR Instruction\n");
+            sEM->ALU_result = ALU1 | ALU2;
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case SLL:
+            printf("SLL Instruction\n");
+            sEM->ALU_result = ALU1 << DE->shamt;
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case SRL:
+            printf("SRL Instruction\n");
+            sEM->ALU_result = ALU1 >> DE->shamt;
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case SLT:
+            printf("SLT Instruction\n");
+            if(ALU1 < ALU2){
+              sEM->ALU_result == 1;
+            }else{
+              sEM->ALU_result == 0;
+            }
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case SLTU:
+            printf("SLTU Instruction\n");
+            if(ALU1 < ALU2){
+              sEM->ALU_result == 1;
+            }else{
+              sEM->ALU_result == 0;
+            }
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case SUB:
+            printf("SUB Instruction\n");
+            sEM->ALU_result = ALU1 - ALU2;
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case SUBU:
+            printf("SRL Instruction\n");
+            sEM->ALU_result = ALU1 - ALU2;
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+      }
     }
 }
 
@@ -166,7 +225,6 @@ void memory(){
     sMW->ALU_zero        = EM->ALU_zero;
     // set control lines for next stage
     sMW->CTRL.ALUsrc     = EM->CTRL.ALUsrc;
-    sMW->CTRL.ALUop      = EM->CTRL.ALUop;
     sMW->CTRL.RegDst     = EM->CTRL.RegDst;
     sMW->CTRL.MemWrite   = EM->CTRL.MemWrite;
     sMW->CTRL.MemRead    = EM->CTRL.MemRead;
@@ -291,7 +349,6 @@ void printCTRL(struct PIPE *pipe){
     printf("---------- Print Control ----------\n");
     printf("PCsrc:    0x%x\n",    pipe->CTRL.PCsrc);
     printf("ALUsrc:   0x%x\n",    pipe->CTRL.ALUsrc);
-    printf("ALUop:    0x%x\n",    pipe->CTRL.ALUop);
     printf("RegDst:   0x%x\n",    pipe->CTRL.RegDst);
     printf("RegWrite: 0x%x\n",    pipe->CTRL.RegWrite);
     printf("MemRead:  0x%x\n",    pipe->CTRL.MemRead);
@@ -406,7 +463,6 @@ void clearPipe(struct PIPE *pipe){
 void clearCTRL(struct PIPE *pipe){
     pipe->CTRL.PCsrc     = 0;
     pipe->CTRL.ALUsrc    = 0;
-    pipe->CTRL.ALUop     = 0;
     pipe->CTRL.RegDst    = 0;
     pipe->CTRL.RegWrite  = 0;
     pipe->CTRL.MemRead   = 0;
