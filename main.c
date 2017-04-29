@@ -12,8 +12,8 @@ int main (){
     // init values
     *PC = 0;
     *CLK = 0;
-    iMem[0] = LW_INST;
-    regFile[0x11] = 0xDEAD;
+    iMem[0] = ADDI_INST;
+    regFile[0x09] = 0x64;
     regFile[0x12] = 0xBEEF;
     fetch();
     shadowShift();
@@ -21,6 +21,11 @@ int main (){
     shadowShift();
     printPipe(DE);
     printCTRL(DE);
+    shadowShift();
+    execute();
+    shadowShift();
+    printPipe(EM);
+    printCTRL(EM);
 
     // hazards();
 /*

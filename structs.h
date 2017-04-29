@@ -20,6 +20,9 @@
 // sw t0, 0(t1)  =    0xad280000
 // op(101011)   rs(01001)   rt(01000) immed(0000 0000 0000 0000)
 #define SW_INST 0xad280000 
+// addi t0, t1, -200)  =    0x2128ffc8
+// op(001000)   rs(01001)   rt(01000) immed(1111 1111 1100 1000)
+#define ADDI_INST 0x2128ffc8 
 struct CONTROL{
     // 0: next PC = PC +4        1: computed branch target 
     uint8_t PCsrc: 1;
@@ -52,7 +55,7 @@ struct PIPE{
     uint8_t rd: 5;
     uint8_t shamt: 5;
     uint8_t funct: 6;
-    uint32_t immed: 32;
+    int32_t immed: 32;
     uint32_t addrs: 26;
     uint32_t MI: 32;
     uint32_t RD1: 32;

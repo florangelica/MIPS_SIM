@@ -82,8 +82,10 @@ void decode(){
         // ----- Set Pipe Fields 
         sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
         sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
-        sDE->immed = (uint32_t) ((FD->MI >> 16) & 0xFFFF);
+        sDE->immed = (int32_t) ((FD->MI & 0xFFFF)<<16)>>16;
         // ----- Set Control Lines -----
+        sDE->RD1   = (uint32_t) regFile[sDE->rs];
+        sDE->RD2   = (uint32_t) regFile[sDE->rt];
         if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
             sDE->CTRL.MemWrite   = (uint8_t) 1;  // write to memory for stores
         }else sDE->CTRL.RegWrite = (uint8_t) 1;  // else write a register
@@ -132,7 +134,9 @@ void execute(){
     uint32_t ALU2;
     if(DE->CTRL.ALUsrc == 0){
         ALU2 = DE->RD2; 
-    }else ALU2 = DE->immed;
+    }else{
+       ALU2 = (int32_t) DE->immed;
+    }
     // determine ALU operation
     if(DE->op == 0){ // R Type
       switch(DE->funct){
@@ -204,6 +208,80 @@ void execute(){
             sEM->ALU_result = ALU1 - ALU2;
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
+      }
+    }else{
+        switch(DE->op){
+            case ADDI:
+                printf("ADDI Instruction\n");
+                sEM->ALU_result = ALU1 + ALU2 ;
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case ADDIU:
+                printf("ADDIU Instruction\n");
+                sEM->ALU_result = ALU1 + ALU2;
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case ANDI:
+                printf("ANDI Instruction\n");
+                sEM->ALU_result = ALU1 & ALU2;
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case BEQ:
+                printf("BEQ Instruction\n");
+                if(ALU1 == ALU2){
+                  sEM->ALU_zero = 1;
+                }else{
+                  sEM->ALU_zero = 0;
+                }
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case BNE:
+                printf("BNE Instruction\n");
+                if(ALU1 != ALU2){
+                  sEM->ALU_zero = 1;
+                }else{
+                  sEM->ALU_zero = 0;
+                }
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case LW:
+                printf("LW Instruction\n");
+                sEM->ALU_result = ALU1 + ALU2;
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case SW:
+                printf("SW Instruction\n");
+                sEM->ALU_result = ALU1 + ALU2;
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case ORI:
+                printf("ORI Instruction\n");
+                sEM->ALU_result = ALU1 | ALU2;
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case XORI:
+                printf("XORI Instruction\n");
+                sEM->ALU_result = ALU1 ^ ALU2;
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case SLTI:
+                printf("SLTI Instruction\n");
+                if(ALU1 < ALU2){
+                   sEM->ALU_result == 1;
+                }else{
+                   sEM->ALU_result == 0;
+                }
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case SLTIU:
+                printf("SLTIU Instruction\n");
+                if(ALU1 < ALU2){
+                   sEM->ALU_result == 1;
+                }else{
+                   sEM->ALU_result == 0;
+                }
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
       }
     }
 }
