@@ -1,6 +1,7 @@
 #include"structs.h"
 #include<stdio.h>
 #include"instDef.h"
+#include"mainMemory.h"
 #include"stages.h"
 #define FORWARD 0
 

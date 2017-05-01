@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include"mainMemory.h"
 #include"structs.h"
 
 

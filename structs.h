@@ -3,8 +3,6 @@
 #include<stdint.h>
 #include<stdlib.h>
 
-// define constant values
-#define MEM_SIZE 500
 // add t0,s1,s2   =   0x02324020
 // op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
 #define ADD_INST 0x02324020 
@@ -23,6 +21,7 @@
 // addi t0, t1, -200)  =    0x2128ffc8
 // op(001000)   rs(01001)   rt(01000) immed(1111 1111 1100 1000)
 #define ADDI_INST 0x2128ffc8 
+
 struct CONTROL{
     // 0: next PC = PC +4        1: computed branch target 
     uint8_t PCsrc: 1;
@@ -66,11 +65,6 @@ struct PIPE{
     struct CONTROL CTRL;
 };
 
-uint32_t *regFile;
-uint32_t *iMem;
-uint32_t *dMem;
-uint32_t *PC;
-uint32_t *CLK;
 struct PIPE *FD;
 struct PIPE *DE;
 struct PIPE *EM;

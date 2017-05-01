@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include"stages.h"
 #include"structs.h"
-
+#include"mainMemory.h"
 
 int main (){
     // heap structs
