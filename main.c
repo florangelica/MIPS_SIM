@@ -5,16 +5,25 @@
 #include"structs.h"
 #include"cache.h"
 
-
 int main (){
     // heap structs
     initStructs();
     initCache();
 
+    //Icache[0].tag = OR_INST;
+    //printf("or instruction: %x\n",OR_INST);
+    //printf("or instruction tag: %x\n",Icache[0].tag);
+    iMem[0x04087636] = OR_INST;
+    dMem[0x04087636] = OR_INST;
+    mem2pipe(0x04087636,1);
+    printf("-------------\n");
+    mem2pipe(0x04087636,0);
+
+
     // init values
     *PC = 0;
     *CLK = 0;
-    iMem[0] = OR_INST;
+
     regFile[0x11] = 0xDEAD;
     regFile[0x12] = 0xBEEF;
     //hazards();

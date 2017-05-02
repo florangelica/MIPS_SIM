@@ -6,7 +6,7 @@ main.run: $(OBJECTS)
 	$(CC) -Llib $(OBJECTS) -lm
 
 $(OBJECTS): $(FILES)
-	$(CC) -Wall -Iinclude -c $(FILES)
+	$(CC) -Iinclude -c $(FILES)
 
 clean:
 	rm *.o

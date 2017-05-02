@@ -4,7 +4,7 @@
 #include<stdlib.h>
 
 // define constant values
-#define MEM_SIZE 500
+#define MEM_SIZE 0x55555555
 // add t0,s1,s2   =   0x02324020
 // op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
 #define ADD_INST 0x02324020 
