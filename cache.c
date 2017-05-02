@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include "cache.h"
 #include "structs.h"
+#include "mainMemory.h"
 
 
 void initCache(){
@@ -109,7 +110,17 @@ void cache2mem(){
     // NOTE: only used for Dcache since Icache is never dirty
 }
 
-void pipe2mem();
+void pipe2mem(uint32_t addr, uint32_t word ){
+    // ID dictates I cache or D cache
+    // ID = 0 --> Dcache
+    if(CACHE_ON){
+        //NOTE: add write back shizznitz
+    }else{
+        // write word back to memory 
+        dMem[addr] = word;
+    }
+
+}
 
 #define mem2pipePrint 1
 void mem2pipe(uint32_t addr, int ID){
