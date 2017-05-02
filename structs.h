@@ -3,14 +3,39 @@
 #include<stdint.h>
 #include<stdlib.h>
 
-// define constant values
-#define MEM_SIZE 0x55555555
-// add t0,s1,s2   =   0x02324020
-// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
-#define ADD_INST 0x02324020 
-// or t0,s1,s2   =   0x02324025
-// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100101)
-#define OR_INST 0x02324025
+//register values
+#define $zero 0
+#define $at   1
+#define $v0   2
+#define $v1   3
+#define $a0   4
+#define $a1   5
+#define $a2   6
+#define $a3   7
+#define $t0   8
+#define $t1   9
+#define $t2   10
+#define $t3   11
+#define $t4   12
+#define $t5   13
+#define $t6   14
+#define $t7   15
+#define $s0   16
+#define $s1   17
+#define $s2   18
+#define $s3   19
+#define $s4   20
+#define $s5   21
+#define $s6   22
+#define $s7   23
+#define $t8   24
+#define $t9   25
+#define $k0   26
+#define $k1   27
+#define $gp   28
+#define $sp   29
+#define $fp   30
+#define $ra   31
 
 struct CONTROL{
     // 0: next PC = PC +4        1: computed branch target 
@@ -18,7 +43,7 @@ struct CONTROL{
     // 0: 2nd ALU operand = RD2  1: 2nd ALU Operand = 16-bit sign extnd immed val 
     uint8_t ALUsrc: 1; 
     // designates which operation the ALU is to execute
-    uint8_t ALUop: 8;
+    // uint8_t ALUop: 8;
     // 0: Destination reg = rt   1: Destination reg = rd 
     uint8_t RegDst: 1;
     // 0: NONE                   1: the WRITE REG is written to with WD
@@ -29,6 +54,11 @@ struct CONTROL{
     uint8_t MemWrite: 1;
     // 0: WD = ALU output        1: WD = from data mem
     uint8_t MemtoReg: 1;
+    // 0: Not a Branch           1: Branch Instruciton
+    uint8_t Branch: 1;
+    // 0: Not a Jump             1: Jump Instruciton
+    uint8_t Jump: 1;
+
 };
 
 struct PIPE{
@@ -39,7 +69,7 @@ struct PIPE{
     uint8_t rd: 5;
     uint8_t shamt: 5;
     uint8_t funct: 6;
-    uint32_t immed: 32;
+    int32_t immed: 32;
     uint32_t addrs: 26;
     uint32_t MI: 32;
     uint32_t RD1: 32;
@@ -50,11 +80,6 @@ struct PIPE{
     struct CONTROL CTRL;
 };
 
-uint32_t *regFile;
-uint32_t *iMem;
-uint32_t *dMem;
-uint32_t *PC;
-uint32_t *CLK;
 struct PIPE *FD;
 struct PIPE *DE;
 struct PIPE *EM;
@@ -67,4 +92,3 @@ struct PIPE *sMW;
 void initStructs();
 void freeStructs();
 #endif
-

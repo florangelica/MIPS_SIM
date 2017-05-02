@@ -4,30 +4,35 @@
 #include"stages.h"
 #include"structs.h"
 #include"cache.h"
+#include"mainMemory.h"
 
 int main (){
-    // heap structs
+    // heap structs 
+    
     initStructs();
     initCache();
-
-    //Icache[0].tag = OR_INST;
-    //printf("or instruction: %x\n",OR_INST);
-    //printf("or instruction tag: %x\n",Icache[0].tag);
-    iMem[0x04087636] = OR_INST;
-    dMem[0x04087636] = OR_INST;
-    mem2pipe(0x04087636,1);
-    printf("-------------\n");
-    mem2pipe(0x04087636,0);
-
-
+    initMemory();
     // init values
-    *PC = 0;
+    *PC = (uint32_t) iMem[5];
+    printf("PC: 0x%x\n", *PC);
+    regFile[$sp] = iMem[0];
+    regFile[$fp] = iMem[1];
+
     *CLK = 0;
 
-    regFile[0x11] = 0xDEAD;
-    regFile[0x12] = 0xBEEF;
-    //hazards();
+    fetch();
+    shadowShift();
+    decode();
+    shadowShift();
+    printPipe(DE);
+    printCTRL(DE);
+    shadowShift();
+    execute();
+    shadowShift();
+    printPipe(EM);
+    printCTRL(EM);
 
+    // hazards();
 /*
     while(*CLK < 6){
         fetch();
@@ -43,6 +48,7 @@ int main (){
     }
     */
     //clear heap memory
+    freeMemory();
     freeStructs();
     return 0;
 }

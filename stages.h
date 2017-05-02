@@ -10,5 +10,11 @@ void execute();
 void memory();
 void writeBack();
 void shadowShift();
+void printPipeLine();
 void printPipe();
+void printCTRL();
+void clearPipe();
+void clearCTRL();
+void hazards();
+
 #endif

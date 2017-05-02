@@ -24,7 +24,7 @@
 #define XOR     0x26 //0b100110
 
 // I TYPE INSTRUCTIONS
-// Opcodeds:
+// Opcodes:
 
 #define ADDI    0x08 //0b001000
 #define ADDIU   0x09 //0b001001
@@ -52,4 +52,5 @@
 // * note JR is interpreted as an R TYPE
 #define J       0x02 //0b000010
 #define JAL     0x03 //0b000011
+
 #endif
