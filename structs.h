@@ -3,24 +3,39 @@
 #include<stdint.h>
 #include<stdlib.h>
 
-// add t0,s1,s2   =   0x02324020
-// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100000)
-#define ADD_INST 0x02324020 
-// or t0,s1,s2   =    0x02324025
-// op(000000)   rs(10001)   rt(10010)   rd(01000)   shamt(00000)   funct(100101)
-#define OR_INST 0x02324025
-// J target      =    0x08000064
-// op(000010)   target(00 0000 0000 0000 0000 0110 0100)
-#define J_INST  0x08000064
-// lw t0, 0(t1)  =    0x8d280000
-// op(100011)   rs(01001)   rt(01000) immed(0000 0000 0000 0000)
-#define LW_INST 0x8d280000 
-// sw t0, 0(t1)  =    0xad280000
-// op(101011)   rs(01001)   rt(01000) immed(0000 0000 0000 0000)
-#define SW_INST 0xad280000 
-// addi t0, t1, -200)  =    0x2128ffc8
-// op(001000)   rs(01001)   rt(01000) immed(1111 1111 1100 1000)
-#define ADDI_INST 0x2128ffc8 
+//register values
+#define $zero 0
+#define $at   1
+#define $v0   2
+#define $v1   3
+#define $a0   4
+#define $a1   5
+#define $a2   6
+#define $a3   7
+#define $t0   8
+#define $t1   9
+#define $t2   10
+#define $t3   11
+#define $t4   12
+#define $t5   13
+#define $t6   14
+#define $t7   15
+#define $s0   16
+#define $s1   17
+#define $s2   18
+#define $s3   19
+#define $s4   20
+#define $s5   21
+#define $s6   22
+#define $s7   23
+#define $t8   24
+#define $t9   25
+#define $k0   26
+#define $k1   27
+#define $gp   28
+#define $sp   29
+#define $fp   30
+#define $ra   31
 
 struct CONTROL{
     // 0: next PC = PC +4        1: computed branch target 

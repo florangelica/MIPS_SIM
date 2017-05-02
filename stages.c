@@ -43,6 +43,30 @@ void decode(){
     clearPipe(sDE);
     clearCTRL(sDE);
     // Pass Values
+    // forward pipeline values to next stage
+    sDE->rs              = FD->rs;
+    sDE->rt              = FD->rt;
+    sDE->rd              = FD->rd;
+    sDE->shamt           = FD->shamt;
+    sDE->funct           = FD->funct;
+    sDE->immed           = FD->immed;
+    sDE->addrs           = FD->addrs;
+    sDE->MI              = FD->MI;
+    sDE->WD              = FD->WD;
+    sDE->RD1             = FD->RD1;
+    sDE->RD2             = FD->RD2;
+    sDE->ALU_result      = FD->ALU_result;
+    sDE->ALU_zero        = FD->ALU_zero;
+    // set control lines for next stage
+    sDE->CTRL.PCsrc      = FD->CTRL.PCsrc;
+    sDE->CTRL.ALUsrc     = FD->CTRL.ALUsrc;
+    sDE->CTRL.RegDst     = FD->CTRL.RegDst;
+    sDE->CTRL.MemWrite   = FD->CTRL.MemWrite;
+    sDE->CTRL.MemRead    = FD->CTRL.MemRead;
+    sDE->CTRL.MemtoReg   = FD->CTRL.MemtoReg;
+    sDE->CTRL.RegWrite   = FD->CTRL.RegWrite;
+    sDE->CTRL.Branch     = FD->CTRL.Branch;
+    sDE->CTRL.Jump       = FD->CTRL.Jump;
     // Opcode field
     sDE->op =(uint8_t) (FD->MI >> 26);
 

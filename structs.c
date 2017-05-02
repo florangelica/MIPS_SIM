@@ -5,11 +5,10 @@
 
 
 void initStructs(){
-    regFile = malloc(32*sizeof(uint32_t));
-    iMem = malloc(MEM_SIZE*sizeof(uint32_t));
-    dMem = malloc(MEM_SIZE*sizeof(uint32_t));
-    PC = malloc(sizeof(uint32_t));
     CLK = malloc(sizeof(uint32_t));
+    PC = malloc(sizeof(uint32_t));
+    regFile = malloc(32*sizeof(uint32_t));
+
     FD = malloc(sizeof(struct PIPE));
     DE= malloc(sizeof(struct PIPE));
     EM= malloc(sizeof(struct PIPE));
@@ -22,10 +21,9 @@ void initStructs(){
 }
 
 void freeStructs(){
-    free(regFile);
-    free(iMem);
-    free(dMem);
     free(PC);
+    free(CLK);
+    free(regFile);
     free(FD);
     free(DE);
     free(EM);

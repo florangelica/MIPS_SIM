@@ -6,15 +6,17 @@
 #include"mainMemory.h"
 
 int main (){
-    // heap structs
+    // heap structs 
+    
     initStructs();
-
+    initMemory();
     // init values
-    *PC = 0;
+    *PC = (uint32_t) iMem[5];
+    printf("PC: 0x%x\n", *PC);
+    regFile[$sp] = iMem[0];
+    regFile[$fp] = iMem[1];
+
     *CLK = 0;
-    iMem[0] = ADDI_INST;
-    regFile[0x09] = 0x64;
-    regFile[0x12] = 0xBEEF;
     fetch();
     shadowShift();
     decode();
@@ -43,6 +45,7 @@ int main (){
     }
     */
     //clear heap memory
+    freeMemory();
     freeStructs();
     return 0;
 }
