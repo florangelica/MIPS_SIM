@@ -115,6 +115,8 @@ void pipe2mem(uint32_t addr, uint32_t word ){
     // ID = 0 --> Dcache
     if(CACHE_ON){
         //NOTE: add write back shizznitz
+        if(WR_BUFFER){
+        }
     }else{
         // write word back to memory 
         dMem[addr] = word;
