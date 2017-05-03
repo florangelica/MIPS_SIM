@@ -3,7 +3,7 @@
 
 #include<stdint.h>
 
-#define CACHE_ON 1
+#define CACHE_ON 0
 
 #define true 1
 #define false 0

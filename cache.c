@@ -115,8 +115,6 @@ void pipe2mem(uint32_t addr, uint32_t word ){
     // ID = 0 --> Dcache
     if(CACHE_ON){
         //NOTE: add write back shizznitz
-        if(WR_BUFFER){
-        }
     }else{
         // write word back to memory 
         dMem[addr] = word;
@@ -133,7 +131,7 @@ void mem2pipe(uint32_t addr, int ID){
             // when cache is enabled
             // check cache for data 
             // if miss bring data from main memory to cache
-            // write data to sMW->RD1
+            // write data to sMW->RD
             uint32_t indx = (addr << TAG_LEN)>>(TAG_LEN+BYO_LEN+BLO_LEN);
             uint32_t blockOff = (addr << TAG_LEN+IDX_LEN)>>(TAG_LEN+IDX_LEN+BYO_LEN);
             int ret = isHit(addr,1);
@@ -163,7 +161,7 @@ void mem2pipe(uint32_t addr, int ID){
             // when cache is enabled
             // check cache for data 
             // if miss bring data from main memory to cache
-            // write data to sMW->RD1
+            // write data to sMW->RD
             // TODO: add ID to isHit and mem2cache
             uint32_t indx = (addr << TAG_LEN)>>(TAG_LEN+BYO_LEN+BLO_LEN);
             uint32_t blockOff = (addr << TAG_LEN+IDX_LEN)>>(TAG_LEN+IDX_LEN+BYO_LEN);
@@ -178,15 +176,16 @@ void mem2pipe(uint32_t addr, int ID){
                 // miss
                 // TODO: figure out how to decied which block to write when more than 1
                 mem2cache(addr,0,0);
-                sMW->RD1 = Dcache[indx].blk[0].data[blockOff];
+                sMW->RD = Dcache[indx].blk[0].data[blockOff];
             }else{
                 // hit
-                sMW->RD1 = Dcache[indx].blk[ret].data[blockOff];
+                sMW->RD = Dcache[indx].blk[ret].data[blockOff];
             }
         }else{
             // cache is not enabled
-            // grab instruction from memory
-            sMW->RD1 = dMem[addr];
+            // grab data from memorya
+            printf("Getting Data\n");
+            sMW->RD = iMem[addr];
         }
     }
 }
