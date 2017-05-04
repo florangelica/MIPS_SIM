@@ -5,6 +5,7 @@
 #include"structs.h"
 #include"cache.h"
 #include"mainMemory.h"
+#include"instDef.h"
 
 int main (){
     // heap structs 
@@ -13,7 +14,7 @@ int main (){
     initCache();
     initMemory();
     // init values
-    *PC = 0x0e; //(uint32_t) iMem[5];
+    *PC = 0x8; //(uint32_t) iMem[5];
     printf("PC: 0x%x\n", *PC);
     regFile[$sp] = iMem[0];
     regFile[$fp] = iMem[1];

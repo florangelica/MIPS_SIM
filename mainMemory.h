@@ -30,6 +30,8 @@ uint32_t *dMem;
 uint32_t *PC;
 uint32_t *CLK;
 
+uint32_t makeRtype(uint8_t inst, uint8_t rs, uint8_t rt, uint8_t rd, uint8_t shamt, uint8_t funct);
+uint32_t makeItype(uint8_t inst, uint8_t rs, uint8_t rt, uint16_t immed);
 
 void initMemory();
 void freeMemory();

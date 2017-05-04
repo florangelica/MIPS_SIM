@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include"instDef.h"
 #include<stdio.h>
+#include"structs.h"
 
 uint32_t programImage1[MEM_SIZE]={ 
   0x00000bb8,//$sp = 3000
@@ -498,15 +499,28 @@ uint32_t programImage1[MEM_SIZE]={
   0x0f0f0000,
   0x0000e000
 };
+uint32_t makeRtype(uint8_t inst, uint8_t rs, uint8_t rt, uint8_t rd, uint8_t shamt, uint8_t funct){
+    uint32_t machInst = (inst<<26)|(rs<<21)|(rt<<16)|(rd<<11)|(shamt<<6)|funct;
+      return machInst;
+}
+uint32_t makeItype(uint8_t inst, uint8_t rs, uint8_t rt, uint16_t immed){
+    uint32_t machInst = (inst<<26)|(rs<<21)|(rt<<16)|immed;
+      return machInst;
+}
+
 void initMemory(){
     iMem = malloc(MEM_SIZE*sizeof(uint32_t));
     dMem = malloc(MEM_SIZE*sizeof(uint32_t));
-    int i;
-    for( i = 0; i < MEM_SIZE; i++){
-      iMem[i] = programImage1[i];
-    }
+    
+    iMem[5] = 0x6;
+    iMem[6] = makeRtype(0, $v0, $s0, $v1, 0, ADD);
+    iMem[7] = makeItype(ADDI, $v0, $v1, 0xffc4);
+    iMem[8] = makeItype(ADDIU, $v0, $v1, 0xffc4);
+//    int i;
+//    for( i = 0; i < MEM_SIZE; i++){
+//       iMem[i] = programImage1[i];
+//    }
 }
-
 
 void freeMemory(){
     free(iMem);

@@ -72,8 +72,8 @@ struct PIPE{
     int32_t immed: 32;
     uint32_t addrs: 26;
     uint32_t MI: 32;
-    uint32_t RD1: 32;
-    uint32_t RD2: 32;
+    int32_t RD1: 32;
+    int32_t RD2: 32;
     uint32_t RD: 32;
     uint32_t WD: 32;
     uint32_t ALU_result: 32;
