@@ -13,6 +13,12 @@ int main (){
     initCache();
     initMemory();
     // init values
+    
+  printf("testing\n");
+  //iMem[0x00005501] = 0xDEADBEEF;
+  
+  pipe2mem(0x00005501,0xDEADBEEF);
+  /*
     *PC = (uint32_t) iMem[5];
     printf("PC: 0x%x\n", *PC);
     regFile[$sp] = iMem[0];
@@ -31,7 +37,7 @@ int main (){
     shadowShift();
     printPipe(EM);
     printCTRL(EM);
-
+*/
     // hazards();
 /*
     while(*CLK < 6){
