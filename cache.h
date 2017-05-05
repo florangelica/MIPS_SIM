@@ -52,5 +52,5 @@ void cache2mem();
 uint32_t getBlock(int ID, uint32_t addr);
 void pipe2mem(uint32_t addr, uint32_t word );
 void mem2pipe(int ID, uint32_t addr);
-
+void flush(uint32_t addr);
 #endif
