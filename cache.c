@@ -257,11 +257,11 @@ void mem2pipe(int ID, uint32_t addr){
         // Dcache
         if(CACHE_ON){
             blkNum = getBlock(ID,addr);
-            sMW->RD1 = Dcache[indx].blk[blkNum].data[blkOff];
+            sMW->RD = Dcache[indx].blk[blkNum].data[blkOff];
         }else{
             // cache is not enabled
             // grab instruction from memory
-            sMW->RD1 = iMem[addr];
+            sMW->RD = iMem[addr];
         }
     }
 }
