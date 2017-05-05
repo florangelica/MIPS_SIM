@@ -2,7 +2,6 @@
 #define INSTRDEF_H_
 
 // Purpose: defines the opcodes (or function codes) for required instructions
-
 // R TYPE INSTRUCTIONS
 // Opcode = 0
 // function code

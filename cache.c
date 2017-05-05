@@ -49,7 +49,7 @@ void nxtInSet(int ID, uint32_t addr){
 }
 
 // main functions
-#define isHitPrint 1
+#define isHitPrint 0
 int isHit(int ID, uint32_t addr){
     // hit return block number
     // miss return -1
@@ -94,7 +94,7 @@ int isHit(int ID, uint32_t addr){
 
 
 
-#define mem2cachePrint 1
+#define mem2cachePrint 0
 void mem2cache(int ID, uint32_t addr, int blkNum){
     int i;
     uint32_t indx;
@@ -145,7 +145,7 @@ void mem2cache(int ID, uint32_t addr, int blkNum){
 
 
 
-#define cache2memPrint 1
+#define cache2memPrint 0
 void cache2mem(){
     // move contents of WR_buf to memory
     int i;
@@ -194,7 +194,7 @@ uint32_t getBlock(int ID, uint32_t addr){
 }
 
 
-#define p2mPrint 1
+#define p2mPrint 0
 void pipe2mem(uint32_t addr, uint32_t word ){
     if(CACHE_ON){
         int i;
@@ -232,7 +232,7 @@ void pipe2mem(uint32_t addr, uint32_t word ){
 
 
 
-#define mem2pipePrint 1
+#define mem2pipePrint 0
 void mem2pipe(int ID, uint32_t addr){
     // ID dictates I cache or D cache
     // ID = 0 --> Dcache

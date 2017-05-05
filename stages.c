@@ -14,7 +14,7 @@ void fetch(){
     clearPipe(sFD);
     clearCTRL(sFD);
     // get instruction from iMem
-    mem2pipe((int32_t)*PC, 1);
+    mem2pipe(1,(int32_t)*PC);
     printf("sFD->MI: 0x%x\n", sFD->MI);
     sFD->PC =*PC;
     *PC = *PC + 1;
@@ -90,7 +90,7 @@ void decode(){
         // ----- Set Control Lines -----
         sDE->CTRL.RegDst     = (uint8_t) 1;
         sDE->CTRL.RegWrite   = (uint8_t) 1;
-        if(sDE->op == JR){
+        if((sDE->op == JR)|| (sDE->op == JAL)|| (sDE->op == J)){
             sDE->CTRL.Jump   = (uint8_t) 1;
         }
 
@@ -101,7 +101,6 @@ void decode(){
         // set target 
         sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
         // ----- Set Control Lines -----
-        sDE->CTRL.RegWrite   = (uint8_t) 1; // write register at the end
         sDE->CTRL.Jump       = (uint8_t) 1;
 
     //I TYPE
@@ -170,16 +169,17 @@ void execute(){
     int32_t ALU1 = sEM->RD1;
     int32_t ALU2;
     if(sEM->CTRL.ALUsrc == 0){
-        ALU2 = (int32_t)sEM->RD2; 
+       ALU2 = (int32_t)sEM->RD2; 
     }else{
        ALU2 = sEM->immed;
     }
     // determine ALU operation
-    if(DE->op == 0){ // R Type
+    if(sEM->op == 0){ // R Type
+      printf("R TYPE IN EXECUTE\n");
       switch(sEM->funct){
         case JR:
             printf("JR Instruction\n");
-            *PC = ALU1;
+            sEM->ALU_result = ALU1; // will use this value to set PC to address
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case MOVN:
@@ -269,8 +269,20 @@ void execute(){
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
       }
-    }else if ((sEM->op)!= 0){
+    }else{
+        printf(" NOT R TYPE");
         switch(sEM->op){
+            case J:
+                printf("J Instruction\n");
+                sEM->ALU_result =((*PC+4)&0xf000000)|(sEM->addrs<<2);
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case JAL:
+                printf("JAL Instruction\n");
+                sEM->ALU_result =((*PC+4)&0xf000000)|(sEM->addrs<<2);
+                regFile[$ra] = *PC + 8;
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
             case ADDI:
                 printf("ADDI Instruction\n");
                 sEM->ALU_result = (ALU1) + (ALU2);
@@ -289,6 +301,34 @@ void execute(){
             case BEQ: 
                 printf("BEQ Instruction\n");
                 if(ALU1 == ALU2){
+                  sEM->ALU_zero = 1;
+                  sEM->ALU_result = (*PC + 4) + (ALU2>>2);
+                }else{
+                  sEM->ALU_zero = 0;
+                }
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case BGTZ: 
+                printf("BGTZ Instruction\n");
+                if(ALU1 > 0){
+                  sEM->ALU_zero = 1;
+                }else{
+                  sEM->ALU_zero = 0;
+                }
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case BLEZ: 
+                printf("BLEZ Instruction\n");
+                if(ALU1 <= 0){
+                  sEM->ALU_zero = 1;
+                }else{
+                  sEM->ALU_zero = 0;
+                }
+                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                break;
+            case BLTZ: 
+                printf("BLTZ Instruction\n");
+                if(ALU1 < 0){
                   sEM->ALU_zero = 1;
                 }else{
                   sEM->ALU_zero = 0;
@@ -390,7 +430,7 @@ void memory(){
         int byteOffset = sMW-> ALU_result & 0x00000003;
         if(sMW->op == LW){
             printf("loading...\n");
-            mem2pipe((sMW->ALU_result)>>2, 0);
+            mem2pipe(0,(sMW->ALU_result)>>2);
         }else{// TODO LB, LBU, LHU, LUI instruction
           printf("LOAD NOT IMPLEMENTED");
         }
