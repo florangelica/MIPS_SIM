@@ -14,11 +14,13 @@ int main (){
     initCache();
     initMemory();
     // init values
-    *PC = 0x8; //(uint32_t) iMem[5];
+    *PC = (uint32_t) iMem[5];
     printf("PC: 0x%x\n", *PC);
     regFile[$sp] = iMem[0];
     regFile[$fp] = iMem[1];
-    regFile[$v0] = 0x0e;
+    regFile[$s0] = 0xffffffff;
+    regFile[$s1] = 0x00000001;
+    regFile[$v0] = 0x64;
     *CLK = 0;
 
     printf("FETCH STAGE\n");

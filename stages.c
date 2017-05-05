@@ -74,13 +74,13 @@ void decode(){
     sDE->op =(uint8_t) (FD->MI >> 26);
 
     // R-type
-    if( sDE->op == 0){
+    if(sDE->op == 0){
         printf("R-Type \n");
         // ----- Set Pipe Fields -----
         sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
         sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
         if((sDE->op != SRL )&& (sDE->op != SLL)){
-          sDE->rd    = (uint8_t) ((FD->MI >> 11) & 0x1f);
+            sDE->rd    = (uint8_t) ((FD->MI >> 11) & 0x1f);
         }
         sDE->shamt = (uint8_t) ((FD->MI >> 6) & 0x1f);
         sDE->funct = (uint8_t) (FD->MI  & 0x3f);
@@ -110,9 +110,11 @@ void decode(){
         // ----- Set Pipe Fields 
         sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
         sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
-        sDE->immed = (int32_t) (FD->MI & 0x0000FFFF);
-        if(0x00008000 & (sDE->immed)){
-            sDE->immed += 0xffff0000;
+        sDE->immed = (uint32_t) (FD->MI & 0x0000FFFF); //zero extended
+        if(!(sDE->op == ANDI) && !(sDE->op == ORI) && !(sDE->op == XORI)){
+            if(0x00008000 & (sDE->immed)){
+               sDE->immed += 0xffff0000;
+            }
         }
         sDE->RD1   = (uint32_t) regFile[sDE->rs];
         sDE->RD2   = (uint32_t) regFile[sDE->rt];
@@ -165,29 +167,52 @@ void execute(){
     sEM->CTRL.Branch     = DE->CTRL.Branch;
     sEM->CTRL.Jump       = DE->CTRL.Jump;
     // determine ALU values
-    uint32_t ALU1 = DE->RD1;
-    uint32_t ALU2;
-    if(DE->CTRL.ALUsrc == 0){
-        ALU2 = DE->RD2; 
+    int32_t ALU1 = sEM->RD1;
+    int32_t ALU2;
+    if(sEM->CTRL.ALUsrc == 0){
+        ALU2 = (int32_t)sEM->RD2; 
     }else{
-       ALU2 = DE->immed;
+       ALU2 = sEM->immed;
     }
     // determine ALU operation
     if(DE->op == 0){ // R Type
-      switch(DE->funct){
+      switch(sEM->funct){
+        case JR:
+            printf("JR Instruction\n");
+            *PC = ALU1;
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case MOVN:
+            printf("MOVN Instruction\n");
+            if(ALU2 != 0){
+              sEM->ALU_result = ALU1; // rs value will be placed in rd during writeback
+            }else{
+              sEM->ALU_result = regFile[sEM->rd]; 
+            }// leave val in rd
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
+        case MOVZ:
+            printf("MOVZ Instruction\n");
+            if(ALU2 == 0){
+              sEM->ALU_result = ALU1; // rs value will be placed in rd during writeback
+            }else{
+              sEM->ALU_result = regFile[sEM->rd]; 
+            }// leave val in rd
+            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+            break;
         case XOR:
             printf("XOR Instruction\n");
             sEM->ALU_result = ALU1 ^ ALU2;
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
-        case ADD:
+        case ADD: 
             printf("ADD Instruction\n");
-            sEM->ALU_result = ((int32_t) ALU1) | ((int32_t) ALU2);
+            sEM->ALU_result = ALU1 | ALU2;
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
-        case ADDU:
+        case ADDU: 
             printf("ADDU Instruction\n");
-            sEM->ALU_result = ALU1 + ALU2;
+            sEM->ALU_result = (uint32_t)ALU1 + (uint32_t)ALU2;
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case AND:
@@ -217,51 +242,43 @@ void execute(){
             break;
         case SLT:
             printf("SLT Instruction\n");
-            if(((int32_t)ALU1) < ((int32_t)ALU2)){
-              sEM->ALU_result == 1;
+            if(ALU1 < ALU2){
+              sEM->ALU_result = 1;
             }else{
-              sEM->ALU_result == 0;
+              sEM->ALU_result = 0;
             }
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case SLTU:
             printf("SLTU Instruction\n");
-            if(ALU1 < ALU2){
-              sEM->ALU_result == 1;
+            if(((uint32_t)ALU1) < ((uint32_t)ALU2)){
+              sEM->ALU_result = 1;
             }else{
-              sEM->ALU_result == 0;
+              sEM->ALU_result = 0;
             }
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case SUB:
             printf("SUB Instruction\n");
-            sEM->ALU_result = ((int32_t)ALU1) - ((int32_t) ALU2);
+            sEM->ALU_result = ALU1 - ALU2;
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case SUBU:
             printf("SRL Instruction\n");
-            sEM->ALU_result = ALU1 - ALU2;
+            sEM->ALU_result = (uint32_t)ALU1 - (uint32_t)ALU2;
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
       }
-    }else{
-        switch(DE->op){
+    }else if ((sEM->op)!= 0){
+        switch(sEM->op){
             case ADDI:
                 printf("ADDI Instruction\n");
-                sEM->ALU_result = ((int32_t)ALU1) + ((int32_t)ALU2);
-                if(0x00008000 & DE->immed){
-                  sEM->immed += 0xffff0000;
-                  ALU2 = sEM->immed;
-                }
+                sEM->ALU_result = (ALU1) + (ALU2);
                 printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case ADDIU:
                 printf("ADDIU Instruction\n");
-                if(0x00008000 & DE->immed){
-                  sEM->immed += 0xffff0000;
-                  ALU2 = sEM->immed;
-                }
-                sEM->ALU_result = ALU1 + ALU2;
+                sEM->ALU_result = (uint32_t)ALU1 + (uint32_t)ALU2;
                 printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case ANDI:
@@ -269,12 +286,8 @@ void execute(){
                 sEM->ALU_result = ALU1 & ALU2;
                 printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
-            case BEQ:
+            case BEQ: 
                 printf("BEQ Instruction\n");
-                if(0x00008000 & DE->immed){
-                  sEM->immed += 0xffff0000;
-                  ALU2 = sEM->immed;
-                }
                 if(ALU1 == ALU2){
                   sEM->ALU_zero = 1;
                 }else{
@@ -284,10 +297,6 @@ void execute(){
                 break;
             case BNE:
                 printf("BNE Instruction\n");
-                if(0x00008000 & DE->immed){
-                  sEM->immed += 0xffff0000;
-                  ALU2 = sEM->immed;
-                }
                 if(ALU1 != ALU2){
                   sEM->ALU_zero = 1;
                 }else{
@@ -297,19 +306,11 @@ void execute(){
                 break;
             case LW:
                 printf("LW Instruction\n");
-                if(0x00008000 & DE->immed){
-                  sEM->immed += 0xffff0000;
-                  ALU2 = sEM->immed;
-                }
                 sEM->ALU_result = ALU1 + ALU2;
                 printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case SW:
                 printf("SW Instruction\n");
-                if(0x00008000 & DE->immed){
-                  sEM->immed += 0xffff0000;
-                  ALU2 = sEM->immed;
-                }
                 sEM->ALU_result = ALU1 + ALU2;
                 printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
@@ -325,10 +326,6 @@ void execute(){
                 break;
             case SLTI:
                 printf("SLTI Instruction\n");
-                if(0x00008000 & DE->immed){
-                  sEM->immed += 0xffff0000;
-                  ALU2 = sEM->immed;
-                }
                 if(ALU1 < ALU2){
                    sEM->ALU_result == 1;
                 }else{
@@ -338,11 +335,7 @@ void execute(){
                 break;
             case SLTIU:
                 printf("SLTIU Instruction\n");
-                if(0x00008000 & DE->immed){
-                  sEM->immed += 0xffff0000;
-                  ALU2 = sEM->immed;
-                }
-                if(ALU1 < ALU2){
+                if(((uint32_t)ALU1) < ((uint32_t) ALU2)){
                    sEM->ALU_result == 1;
                 }else{
                    sEM->ALU_result == 0;
@@ -386,11 +379,21 @@ void memory(){
         return;
     }else if((sMW->CTRL.MemWrite == 1) && (sMW->CTRL.MemRead == 0)){
         // STORES: write to data mem
-        pipe2mem(EM->ALU_result, EM->WD);
+       int byteOffset = sMW->ALU_result & 0x00000003; 
+       if(sMW->op == SW){
+            pipe2mem((sMW->ALU_result)>>2, sMW->WD);
+        }else{// TODO SB, SH instruction
+          printf("STORE NOT IMPLEMENTED");
+        }
     }else if((sMW->CTRL.MemWrite == 0) && (sMW->CTRL.MemRead == 1)){
         // LOADS: read from data mem
-        printf("loading...\n");
-        mem2pipe(sMW->ALU_result, 0);
+        int byteOffset = sMW-> ALU_result & 0x00000003;
+        if(sMW->op == LW){
+            printf("loading...\n");
+            mem2pipe((sMW->ALU_result)>>2, 0);
+        }else{// TODO LB, LBU, LHU, LUI instruction
+          printf("LOAD NOT IMPLEMENTED");
+        }
     }else {
         //(EM->CTRL.MemWrite == 1) && (EM->CTRL.MemRead == 1)
         printf("ERROR: Both MemWrite and MemRead asserted\n");
