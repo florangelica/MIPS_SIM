@@ -14,10 +14,10 @@ void fetch(){
     clearPipe(sFD);
     clearCTRL(sFD);
     // get instruction from iMem
-    mem2pipe(1,(int32_t)*PC);
-    printf("sFD->MI: 0x%x\n", sFD->MI);
+    mem2pipe(1,(*PC)>>2);
+    printf("sFD->MI: 0x%x: ", sFD->MI);
     sFD->pc =*PC;
-    *PC = *PC + 1;
+    *PC = *PC + 4;
 }
 void hazards(){
 #if FORWARD
@@ -77,7 +77,7 @@ void decode(){
 
     // R-type
     if(sDE->op == 0){
-        printf("R-Type \n");
+//        printf("R-Type \n");
         // ----- Set Pipe Fields -----
         sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
         sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
@@ -98,7 +98,7 @@ void decode(){
 
     // J TYPE
     }else if((sDE->op == J) || (sDE->op == JAL) ){
-        printf("J-Type - op code: 0x%x\n", sDE->op);
+//        printf("J-Type - op code: 0x%x\n", sDE->op);
         // ----- Set Pipe Fields -----
         // set target 
         sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
@@ -107,7 +107,7 @@ void decode(){
 
     //I TYPE
     }else{
-        printf("I-Type\n");
+//        printf("I-Type\n");
         // ----- Set Pipe Fields 
         sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
         sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
@@ -183,7 +183,7 @@ void execute(){
         case JR:
             printf("JR Instruction\n");
             sEM->ALU_result = ALU1; // will use this value to set PC to address
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case MOVN:
             printf("MOVN Instruction\n");
@@ -192,7 +192,7 @@ void execute(){
             }else{
               sEM->ALU_result = regFile[sEM->rd];
             }
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case MOVZ:
             printf("MOVZ Instruction\n");
@@ -201,27 +201,27 @@ void execute(){
             }else{
               sEM->ALU_result = regFile[sEM->rd];
             }
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case XOR:
             printf("XOR Instruction\n");
             sEM->ALU_result = ALU1 ^ ALU2;
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case ADD: 
             printf("ADD Instruction\n");
             sEM->ALU_result = ALU1 | ALU2;
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case ADDU: 
             printf("ADDU Instruction\n");
             sEM->ALU_result = (uint32_t)ALU1 + (uint32_t)ALU2;
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//          printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case AND:
             printf("AND Instruction\n");
             sEM->ALU_result = (ALU1 & ALU2);
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case NOR:
             printf("NOR Instruction\n");
@@ -231,17 +231,17 @@ void execute(){
         case OR:
             printf("OR Instruction\n");
             sEM->ALU_result = ALU1 | ALU2;
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case SLL:
             printf("SLL Instruction\n");
             sEM->ALU_result = ALU1 << DE->shamt;
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case SRL:
             printf("SRL Instruction\n");
             sEM->ALU_result = ALU1 >> DE->shamt;
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case SLT:
             printf("SLT Instruction\n");
@@ -250,7 +250,7 @@ void execute(){
             }else{
               sEM->ALU_result = 0;
             }
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case SLTU:
             printf("SLTU Instruction\n");
@@ -259,17 +259,17 @@ void execute(){
             }else{
               sEM->ALU_result = 0;
             }
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case SUB:
             printf("SUB Instruction\n");
             sEM->ALU_result = ALU1 - ALU2;
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case SUBU:
             printf("SRL Instruction\n");
             sEM->ALU_result = (uint32_t)ALU1 - (uint32_t)ALU2;
-            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
       }
     }else{
@@ -277,28 +277,28 @@ void execute(){
             case J:
                 printf("J Instruction\n");
                 sEM->ALU_result =((sEM->pc+4)&0xf000000)|(sEM->addrs<<2);
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case JAL:
                 printf("JAL Instruction\n");
                 sEM->ALU_result =((sEM->pc+4)&0xf000000)|(sEM->addrs<<2);
                 regFile[$ra] = sEM->pc + 8;
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case ADDI:
                 printf("ADDI Instruction\n");
                 sEM->ALU_result = (ALU1) + (ALU2);
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case ADDIU:
                 printf("ADDIU Instruction\n");
                 sEM->ALU_result = (uint32_t)ALU1 + (uint32_t)ALU2;
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case ANDI:
                 printf("ANDI Instruction\n");
                 sEM->ALU_result = ALU1 & ALU2;
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case BEQ: 
                 printf("BEQ Instruction\n");
@@ -308,7 +308,7 @@ void execute(){
                 }else{
                   sEM->ALU_zero = 0;
                 }
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case BGTZ: 
                 printf("BGTZ Instruction\n");
@@ -317,7 +317,7 @@ void execute(){
                 }else{
                   sEM->ALU_zero = 0;
                 }
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case BLEZ: 
                 printf("BLEZ Instruction\n");
@@ -326,7 +326,7 @@ void execute(){
                 }else{
                   sEM->ALU_zero = 0;
                 }
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case BLTZ: 
                 printf("BLTZ Instruction\n");
@@ -335,7 +335,7 @@ void execute(){
                 }else{
                   sEM->ALU_zero = 0;
                 }
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case BNE:
                 printf("BNE Instruction\n");
@@ -344,27 +344,28 @@ void execute(){
                 }else{
                   sEM->ALU_zero = 0;
                 }
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//               printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case LW:
                 printf("LW Instruction\n");
                 sEM->ALU_result = ALU1 + ALU2;
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case SW:
                 printf("SW Instruction\n");
-                sEM->ALU_result = ALU1 + ALU2;
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+                sEM->ALU_result = (uint32_t) ALU1 + ALU2;
+                printf("location calculated\n: 0x%x\n", sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case ORI:
                 printf("ORI Instruction\n");
                 sEM->ALU_result = ALU1 | ALU2;
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case XORI:
                 printf("XORI Instruction\n");
                 sEM->ALU_result = ALU1 ^ ALU2;
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//               printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case SLTI:
                 printf("SLTI Instruction\n");
@@ -373,7 +374,7 @@ void execute(){
                 }else{
                    sEM->ALU_result == 0;
                 }
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case SLTIU:
                 printf("SLTIU Instruction\n");
@@ -382,7 +383,7 @@ void execute(){
                 }else{
                    sEM->ALU_result == 0;
                 }
-                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+ //               printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
       }
     }
@@ -417,14 +418,15 @@ void memory(){
     sMW->CTRL.RegWrite   = EM->CTRL.RegWrite;
     sMW->CTRL.Branch     = EM->CTRL.Branch;
     sMW->CTRL.Jump       = EM->CTRL.Jump;
-    
     //check control lines
     if((sMW->CTRL.MemWrite == 0) && (sMW->CTRL.MemRead == 0)){
         return;
     }else if((sMW->CTRL.MemWrite == 1) && (sMW->CTRL.MemRead == 0)){
-        // STORES: write to data mem
+      //
+      // STORES: write to data mem
        int byteOffset = sMW->ALU_result & 0x00000003; 
        if(sMW->op == SW){
+          printf("write to memory: 0x%x", sMW->WD);
             pipe2mem((sMW->ALU_result)>>2, sMW->WD);
         }else{// TODO SB, SH instruction
           printf("STORE NOT IMPLEMENTED");
@@ -433,7 +435,6 @@ void memory(){
         // LOADS: read from data mem
         int byteOffset = sMW-> ALU_result & 0x00000003;
         if(sMW->op == LW){
-            printf("loading...\n");
             mem2pipe(0,(sMW->ALU_result)>>2);
         }else{// TODO LB, LBU, LHU, LUI instruction
           printf("LOAD NOT IMPLEMENTED");
@@ -451,27 +452,27 @@ void writeBack(){
         // MW->rt is destination reg
         if(!(MW->CTRL.Jump)){
            regFile[MW->rt] = MW->ALU_result;
-           printf("regFile[rt] = 0x%x\n",MW->ALU_result);
+//           printf("regFile[rt] = 0x%x\n",MW->ALU_result);
         }else{
           printf("regFile[rt] = 0x%x\n", MW->ALU_result);
           int wordLocation = (MW->ALU_result) >> 2;
-          printf("wordLocation: 0x%x Instruction at jump: 0x%x\n", wordLocation, iMem[wordLocation]);
+//          printf("wordLocation: 0x%x Instruction at jump: 0x%x\n", wordLocation, iMem[wordLocation]);
         }
     }else if( (MW->CTRL.MemtoReg == 1) && (MW->CTRL.RegDst == 0)){
         // MW->WD is the write data
         // MW->rt is destination reg
         regFile[MW->rt] = MW->RD;
-        printf("regFile[rt] = %x\n",MW->RD);
+//        printf("regFile[rt] = %x\n",MW->RD);
     }else if( (MW->CTRL.MemtoReg == 0) && (MW->CTRL.RegDst == 1)){
         // MW->ALU_result is write data
         // MW->rd is destination reg
         regFile[MW->rd] = MW->ALU_result;
-        printf("regFile[rd] = %x\n",MW->ALU_result);
+//        printf("regFile[rd] = %x\n",MW->ALU_result);
     }else if( (MW->CTRL.MemtoReg == 1) && (MW->CTRL.RegDst == 1)){
         // MW->WD is the write data
         // MW->rd is destination reg
         regFile[MW->rd] = MW->RD;
-        printf("regFile[rd] = %x\n",MW->RD);
+//        printf("regFile[rd] = %x\n",MW->RD);
     }
 }
 

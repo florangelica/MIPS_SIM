@@ -16,13 +16,14 @@ int main (){
     // init values
     *PC = (uint32_t) iMem[5];
     printf("PC: 0x%x\n", *PC);
-    regFile[$sp] = iMem[0];
+/*  regFile[$sp] = iMem[0];
     regFile[$fp] = iMem[1];
     regFile[$s0] = 0xffffffff;
     regFile[$s1] = 0x00000001;
     regFile[$v0] = 0x64;
+*/
     *CLK = 0;
-
+/*
     printf("FETCH STAGE\n");
     fetch();
     shadowShift();
@@ -47,22 +48,25 @@ int main (){
     printCTRL(MW);
     printf("WRITEBACK STAGE\n");
     writeBack();
-
+*/
     // hazards();
-/*
-    while(*CLK < 6){
+
+    while((*CLK) < 50){
         fetch();
-        decode();
-        execute();
-        memory();
+//        printPipe(FD);
         writeBack();
+
+        decode();
+//        printPipe(DE);
+        execute();
+//        printPipe(EM);
+        memory();
         shadowShift();
+//        printPipe(MW);
         printf("CLK: %d\n",*CLK);
-        printf("PC: %d\n",*PC);
-        printPipe();
         *CLK = *CLK + 1;
     }
-    */
+    
     //clear heap memory
     freeMemory();
     freeStructs();
