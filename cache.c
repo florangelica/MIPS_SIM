@@ -2,7 +2,7 @@
 #include<stdio.h>
 #include "cache.h"
 #include "structs.h"
-#include "mainMemory.h"
+#include "memory.h"
 
 // Memory functions
 void initCache(){

@@ -4,7 +4,7 @@
 #include"stages.h"
 #include"structs.h"
 #include"cache.h"
-#include"mainMemory.h"
+#include"memory.h"
 #include"instDef.h"
 
 int main (){

@@ -1,7 +1,7 @@
 #include"structs.h"
 #include<stdio.h>
 #include"instDef.h"
-#include"mainMemory.h"
+#include"memory.h"
 #include"stages.h"
 #include"cache.h"
 
