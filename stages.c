@@ -16,7 +16,7 @@ void fetch(){
     // get instruction from iMem
     mem2pipe(1,(int32_t)*PC);
     printf("sFD->MI: 0x%x\n", sFD->MI);
-    sFD->PC =*PC;
+    sFD->pc =*PC;
     *PC = *PC + 1;
 }
 void hazards(){
@@ -46,6 +46,8 @@ void decode(){
     clearCTRL(sDE);
     // Pass Values
     // forward pipeline values to next stage
+    sDE->pc              = FD->pc;
+    sDE->op              = FD->op;
     sDE->rs              = FD->rs;
     sDE->rt              = FD->rt;
     sDE->rd              = FD->rd;
@@ -96,7 +98,7 @@ void decode(){
 
     // J TYPE
     }else if((sDE->op == J) || (sDE->op == JAL) ){
-        printf("J-Type\n");
+        printf("J-Type - op code: 0x%x\n", sDE->op);
         // ----- Set Pipe Fields -----
         // set target 
         sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
@@ -141,6 +143,8 @@ void execute(){
     clearPipe(sEM);
     clearCTRL(sEM);
     // forward pipeline values to next stage
+    sEM->pc              = DE->pc;
+    sEM->op              = DE->op;
     sEM->rs              = DE->rs;
     sEM->rt              = DE->rt;
     sEM->rd              = DE->rd;
@@ -175,7 +179,6 @@ void execute(){
     }
     // determine ALU operation
     if(sEM->op == 0){ // R Type
-      printf("R TYPE IN EXECUTE\n");
       switch(sEM->funct){
         case JR:
             printf("JR Instruction\n");
@@ -185,19 +188,19 @@ void execute(){
         case MOVN:
             printf("MOVN Instruction\n");
             if(ALU2 != 0){
-              sEM->ALU_result = ALU1; // rs value will be placed in rd during writeback
+              sEM->ALU_result = ALU1; //res value will be placed in rd
             }else{
-              sEM->ALU_result = regFile[sEM->rd]; 
-            }// leave val in rd
+              sEM->ALU_result = regFile[sEM->rd];
+            }
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case MOVZ:
             printf("MOVZ Instruction\n");
             if(ALU2 == 0){
-              sEM->ALU_result = ALU1; // rs value will be placed in rd during writeback
+              sEM->ALU_result = ALU1; //res value will be placed in rd
             }else{
-              sEM->ALU_result = regFile[sEM->rd]; 
-            }// leave val in rd
+              sEM->ALU_result = regFile[sEM->rd];
+            }
             printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case XOR:
@@ -270,17 +273,16 @@ void execute(){
             break;
       }
     }else{
-        printf(" NOT R TYPE");
         switch(sEM->op){
             case J:
                 printf("J Instruction\n");
-                sEM->ALU_result =((*PC+4)&0xf000000)|(sEM->addrs<<2);
+                sEM->ALU_result =((sEM->pc+4)&0xf000000)|(sEM->addrs<<2);
                 printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case JAL:
                 printf("JAL Instruction\n");
-                sEM->ALU_result =((*PC+4)&0xf000000)|(sEM->addrs<<2);
-                regFile[$ra] = *PC + 8;
+                sEM->ALU_result =((sEM->pc+4)&0xf000000)|(sEM->addrs<<2);
+                regFile[$ra] = sEM->pc + 8;
                 printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case ADDI:
@@ -302,7 +304,7 @@ void execute(){
                 printf("BEQ Instruction\n");
                 if(ALU1 == ALU2){
                   sEM->ALU_zero = 1;
-                  sEM->ALU_result = (*PC + 4) + (ALU2>>2);
+                  sEM->ALU_result = (sEM->pc + 4) + (ALU2>>2);
                 }else{
                   sEM->ALU_zero = 0;
                 }
@@ -390,6 +392,8 @@ void memory(){
     clearPipe(sMW);
     clearCTRL(sMW);
     // forward pipeline values to next stage
+    sMW->pc              = EM->pc;
+    sMW->op              = EM->op;
     sMW->rs              = EM->rs;
     sMW->rt              = EM->rt;
     sMW->rd              = EM->rd;
@@ -445,8 +449,14 @@ void writeBack(){
     if( (MW->CTRL.MemtoReg == 0) && (MW->CTRL.RegDst == 0)){
         // MW->ALU_result is write data
         // MW->rt is destination reg
-        regFile[MW->rt] = MW->ALU_result;
-        printf("regFile[rt] = %x\n",MW->ALU_result);
+        if(!(MW->CTRL.Jump)){
+           regFile[MW->rt] = MW->ALU_result;
+           printf("regFile[rt] = 0x%x\n",MW->ALU_result);
+        }else{
+          printf("regFile[rt] = 0x%x\n", MW->ALU_result);
+          int wordLocation = (MW->ALU_result) >> 2;
+          printf("wordLocation: 0x%x Instruction at jump: 0x%x\n", wordLocation, iMem[wordLocation]);
+        }
     }else if( (MW->CTRL.MemtoReg == 1) && (MW->CTRL.RegDst == 0)){
         // MW->WD is the write data
         // MW->rt is destination reg
@@ -467,7 +477,7 @@ void writeBack(){
 
 void shadowShift(){
     // FD
-    FD->PC          = sFD->PC;
+    FD->pc          = sFD->pc;
     FD->op          = sFD->op;
     FD->rs          = sFD->rs;
     FD->rt          = sFD->rt;
@@ -485,7 +495,7 @@ void shadowShift(){
     FD->ALU_zero    = sFD->ALU_zero;
     FD->CTRL        = sFD->CTRL;
     // DE 
-    DE->PC          = sDE->PC;
+    DE->pc          = sDE->pc;
     DE->op          = sDE->op;
     DE->rs          = sDE->rs;
     DE->rt          = sDE->rt;
@@ -503,7 +513,7 @@ void shadowShift(){
     DE->ALU_zero    = sDE->ALU_zero;
     DE->CTRL        = sDE->CTRL;
     // EM 
-    EM->PC          = sEM->PC;
+    EM->pc          = sEM->pc;
     EM->op          = sEM->op;
     EM->rs          = sEM->rs;
     EM->rt          = sEM->rt;
@@ -521,7 +531,7 @@ void shadowShift(){
     EM->ALU_zero    = sEM->ALU_zero;
     EM->CTRL        = sEM->CTRL;
     // MW 
-    MW->PC          = sMW->PC;
+    MW->pc          = sMW->pc;
     MW->op          = sMW->op;
     MW->rs          = sMW->rs;
     MW->rt          = sMW->rt;
@@ -555,7 +565,7 @@ void printCTRL(struct PIPE *pipe){
 }
 void printPipe(struct PIPE *pipe){
     printf("---------- Print Pipe ----------\n");
-    printf("PC: 0x%x  ",          pipe->PC);
+    printf("pc: 0x%x  ",          pipe->pc);
     printf("op: 0x%x  ",          pipe->op);
     printf("rs: 0x%x  ",          pipe->rs);
     printf("rt: 0x%x  ",          pipe->rt);
@@ -575,7 +585,7 @@ void printPipe(struct PIPE *pipe){
 void printPipeLine(){
     printf("---------- Print Pipe Line ----------\n");
     // FD
-    printf("FD->PC: 0x%x\n",          FD->PC);
+    printf("FD->pc: 0x%x\n",          FD->pc);
     printf("FD->op: 0x%x\n",          FD->op);
     printf("FD->rs: 0x%x\n",          FD->rs);
     printf("FD->rt: 0x%x\n",          FD->rt);
@@ -592,7 +602,7 @@ void printPipeLine(){
     printf("FD->ALU_result: 0x%x\n",  FD->ALU_result);
     printf("FD->ALU_zero: 0x%x\n",    FD->ALU_zero);
     // DE
-    printf("DE->PC: 0x%x\n",          DE->PC);
+    printf("DE->pc: 0x%x\n",          DE->pc);
     printf("DE->op: 0x%x\n",          DE->op);
     printf("DE->rs: 0x%x\n",          DE->rs);
     printf("DE->rt: 0x%x\n",          DE->rt);
@@ -609,7 +619,7 @@ void printPipeLine(){
     printf("DE->ALU_result: 0x%x\n",  DE->ALU_result);
     printf("DE->ALU_zero: 0x%x\n",    DE->ALU_zero);
     // EM
-    printf("EM->PC: 0x%x\n",          EM->PC);
+    printf("EM->pc: 0x%x\n",          EM->pc);
     printf("EM->op: 0x%x\n",          EM->op);
     printf("EM->rs: 0x%x\n",          EM->rs);
     printf("EM->rt: 0x%x\n",          EM->rt);
@@ -626,7 +636,7 @@ void printPipeLine(){
     printf("EM->ALU_result: 0x%x\n",  EM->ALU_result);
     printf("EM->ALU_zero: 0x%x\n",    EM->ALU_zero);
     // MW
-    printf("MW->PC: 0x%x\n",          MW->PC);
+    printf("MW->pc: 0x%x\n",          MW->pc);
     printf("MW->op: 0x%x\n",          MW->op);
     printf("MW->rs: 0x%x\n",          MW->rs);
     printf("MW->rt: 0x%x\n",          MW->rt);
@@ -645,7 +655,7 @@ void printPipeLine(){
     printf("--------------------------------\n");
 }
 void clearPipe(struct PIPE *pipe){
-    pipe->PC          = 0;
+    pipe->pc          = 0;
     pipe->op          = 0;
     pipe->rs          = 0;
     pipe->rt          = 0;

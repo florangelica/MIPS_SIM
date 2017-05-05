@@ -62,7 +62,7 @@ struct CONTROL{
 };
 
 struct PIPE{
-    uint32_t PC: 32;
+    uint32_t pc: 32;
     uint8_t op: 6;
     uint8_t rs: 5;
     uint8_t rt: 5;

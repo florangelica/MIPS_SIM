@@ -33,6 +33,7 @@ int main (){
     shadowShift();
     printPipe(DE);
     printCTRL(DE);
+
     printf("EXECUTE STAGE\n");
     execute();
     shadowShift();
