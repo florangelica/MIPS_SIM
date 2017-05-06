@@ -513,7 +513,7 @@ void initMemory(){
     //dMem = malloc(MEM_SIZE*sizeof(uint32_t));
 
 //    iMem[5] = 0x6;
-//    iMem[6] = 0x08000008; //makeRtype(0, $s0, $s1, $t0, 0, SLT);
+//    iMem[6] = 0x00000000; //makeRtype(0, $s0, $s1, $t0, 0, SLT);
 //    iMem[7] = makeItype(ADDI, $v0, $v1, 0xffc4);
 //    iMem[8] = makeItype(ADDIU, $v0, $v1, 0xffc4);
 

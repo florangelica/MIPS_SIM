@@ -5,14 +5,14 @@
 
 #define CACHE_ON 1
 
-#define BLK_SIZE 8      //words per block
-#define SET_ASS 2       //blocks per set
+#define BLK_SIZE 4      //words per block
+#define SET_ASS 1       //blocks per set
 #define I_CS 8          //sets per Icache
 #define D_CS 8          //sets per Dcache
-#define TAG_LEN 21      //bits of tag
+#define TAG_LEN 27      //bits of tag
 #define VAL_LEN 1       //bits of valid
 #define IDX_LEN 8       //bits of index
-#define BLO_LEN 3       //bits of block offset
+#define BLO_LEN 2       //bits of block offset
 #define BYO_LEN 0       //bits of byte offset
 
 #define WR_BACK 0

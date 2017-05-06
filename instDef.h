@@ -6,6 +6,8 @@
 // Opcode = 0
 // function code
 
+#define NOP     0x00000000
+
 #define ADD     0x20 //0b100000
 #define ADDU    0x21 //0b100001
 #define AND     0x24 //0b100100

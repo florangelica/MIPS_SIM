@@ -51,11 +51,13 @@ int main (){
 */
     // hazards();
 
-    while((*CLK) < 50){
+    while(*PC != 0){
+      if(*PC == 150){
+        printf("copy array");
+      }
         fetch();
-//        printPipe(FD);
+        printPipe(FD);
         writeBack();
-
         decode();
 //        printPipe(DE);
         execute();
@@ -63,10 +65,8 @@ int main (){
         memory();
         shadowShift();
 //        printPipe(MW);
-        printf("CLK: %d\n",*CLK);
         *CLK = *CLK + 1;
     }
-    
     //clear heap memory
     freeMemory();
     freeStructs();

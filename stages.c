@@ -14,10 +14,9 @@ void fetch(){
     clearPipe(sFD);
     clearCTRL(sFD);
     // get instruction from iMem
-    mem2pipe(1,(*PC)>>2);
+    mem2pipe(1,*PC);
     printf("sFD->MI: 0x%x: ", sFD->MI);
     sFD->pc =*PC;
-    *PC = *PC + 4;
 }
 void hazards(){
 #if FORWARD
@@ -72,67 +71,118 @@ void decode(){
     sDE->CTRL.RegWrite   = FD->CTRL.RegWrite;
     sDE->CTRL.Branch     = FD->CTRL.Branch;
     sDE->CTRL.Jump       = FD->CTRL.Jump;
-    // Opcode field
-    sDE->op =(uint8_t) (FD->MI >> 26);
 
-    // R-type
-    if(sDE->op == 0){
-//        printf("R-Type \n");
-        // ----- Set Pipe Fields -----
-        sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
-        sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
-        if((sDE->op != SRL )&& (sDE->op != SLL)){
-            sDE->rd    = (uint8_t) ((FD->MI >> 11) & 0x1f);
-        }
-        sDE->shamt = (uint8_t) ((FD->MI >> 6) & 0x1f);
-        sDE->funct = (uint8_t) (FD->MI  & 0x3f);
-        // set RD1 and RD2
-        sDE->RD1   = (uint32_t) regFile[sDE->rs];
-        sDE->RD2   = (uint32_t) regFile[sDE->rt];
-        // ----- Set Control Lines -----
-        sDE->CTRL.RegDst     = (uint8_t) 1;
-        sDE->CTRL.RegWrite   = (uint8_t) 1;
-        if((sDE->op == JR)|| (sDE->op == JAL)|| (sDE->op == J)){
-            sDE->CTRL.Jump   = (uint8_t) 1;
-        }
-
-    // J TYPE
-    }else if((sDE->op == J) || (sDE->op == JAL) ){
-//        printf("J-Type - op code: 0x%x\n", sDE->op);
-        // ----- Set Pipe Fields -----
-        // set target 
-        sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
-        // ----- Set Control Lines -----
-        sDE->CTRL.Jump       = (uint8_t) 1;
-
-    //I TYPE
+    if(sDE->MI == NOP){
+        return;
     }else{
-//        printf("I-Type\n");
-        // ----- Set Pipe Fields 
-        sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
-        sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
-        sDE->immed = (uint32_t) (FD->MI & 0x0000FFFF); //zero extended
-        if(!(sDE->op == ANDI) && !(sDE->op == ORI) && !(sDE->op == XORI)){
+        sDE->op =(uint8_t) (FD->MI >> 26);
+        // JUMP
+        if((sDE->op == J) || (sDE->op == JR) || (sDE->op == JAL)){
+//        printf("J-Type - op code: 0x%x\n", sDE->op);
+            if(!(sDE->op)){// set target
+               sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
+               *PC = ((*PC + 4)&0xf0000000)|((sDE->addrs)<<2);
+               // insert bubbles
+               sFD->MI = (uint32_t) NOP;
+               sDE->MI = (uint32_t) NOP;
+               if(sDE->op == JAL){
+                   regFile[$ra] = *PC + 8;
+               }
+            }else if(sDE->funct == JR){
+                // decode fields
+                sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
+                sDE->funct = (uint8_t) (FD->MI  & 0x3f);
+                *PC = regFile[sDE->rs];
+            }
+            // BRANCH
+        }else if((sDE->op==BEQ)||(sDE->op==BNE)||(sDE->op==BLEZ)||(sDE->op==BLTZ)||(sDE->op==BGTZ) ){
+            sDE->ALU_zero = 0;
+            sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
+            sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
+            sDE->immed = (uint32_t) (FD->MI & 0x0000FFFF); 
             if(0x00008000 & (sDE->immed)){
                sDE->immed += 0xffff0000;
             }
-        }
-        sDE->RD1   = (uint32_t) regFile[sDE->rs];
-        sDE->RD2   = (uint32_t) regFile[sDE->rt];
-        if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
-            sDE->WD = sDE->RD2;
-        }
-        // ----- Set Control Lines -----
-        if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
-            sDE->CTRL.MemWrite   = (uint8_t) 1;  // write to memory for stores
-        }else sDE->CTRL.RegWrite = (uint8_t) 1;  // else write a register
-        if(sDE->op == LW){
-            sDE->CTRL.MemtoReg   = (uint8_t) 1;  // if a load write memory to register
-            sDE->CTRL.MemRead    = (uint8_t) 1;  // read memory for loads
-        }
-        sDE->CTRL.ALUsrc         = (uint8_t) 1;  // Get immediate field
-        if((sDE->op == BEQ)||(sDE->op == BGTZ)||(sDE->op == BLEZ)||(sDE->op == BLTZ)||(sDE->op == BNE)){
-            sDE->CTRL.Branch     = (uint8_t) 1;  // Branch instruction
+            sDE->RD1   = (uint32_t) regFile[sDE->rs];
+            sDE->RD2   = (uint32_t) regFile[sDE->rt];
+            switch(sDE->op){
+                case BEQ:
+                  if((sDE->RD1) == (sDE->RD2)){
+                    sDE->ALU_zero = 1;
+                  }
+                  break;
+                case BNE:
+                  if((sDE->RD1) != (sDE->RD2)){
+                    sDE->ALU_zero = 1;
+                  }
+                  break;
+                case BLEZ:
+                  if((sDE->RD1) <= 0){
+                    sDE->ALU_zero = 1;
+                  }
+                  break;
+                case BLTZ:
+                  if((sDE->RD1) < 0){
+                    sDE->ALU_zero = 1;
+                  }
+                  break;
+                case BGTZ:
+                  if((sDE->RD1) > 0){
+                    sDE->ALU_zero = 1;
+                  }
+                  break;
+            }
+            if(sDE->ALU_zero == 1){
+              *PC =((sDE->pc) +4) + (int32_t)sDE->immed;
+            }else{
+              *PC = *PC+4;
+            }
+        }else if(sDE->op == 0){
+            *PC = *PC + 4;
+//        printf("R-Type \n");
+        // ----- Set Pipe Fields -----
+            sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
+            sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
+            if((sDE->op != SRL )&& (sDE->op != SLL)){
+                sDE->rd    = (uint8_t) ((FD->MI >> 11) & 0x1f);
+            }
+            sDE->shamt = (uint8_t) ((FD->MI >> 6) & 0x1f);
+            sDE->funct = (uint8_t) (FD->MI  & 0x3f);
+            // set RD1 and RD2
+            sDE->RD1   = (uint32_t) regFile[sDE->rs];
+            sDE->RD2   = (uint32_t) regFile[sDE->rt];
+            // ----- Set Control Lines -----
+            if((sDE->op != SLL)&&(sDE->op != SRL)){
+                sDE->CTRL.RegDst     = (uint8_t) 1;
+            } // SLL and SRL use rt as destination
+            sDE->CTRL.RegWrite   = (uint8_t) 1;
+        //I TYPE
+        }else{
+            *PC = *PC + 4;
+        printf("I-Type\n");
+            // ----- Set Pipe Fields 
+            sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
+            sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
+            sDE->immed = (uint32_t) (FD->MI & 0x0000FFFF); //zero extended
+            if(!(sDE->op == ANDI) && !(sDE->op == ORI) && !(sDE->op == XORI)){
+                if(0x00008000 & (sDE->immed)){
+                   sDE->immed += 0xffff0000;
+                }
+            }
+            sDE->RD1   = (uint32_t) regFile[sDE->rs];
+            sDE->RD2   = (uint32_t) regFile[sDE->rt];
+            if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
+                sDE->WD = sDE->RD2;
+            }
+            // ----- Set Control Lines -----
+            if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
+                sDE->CTRL.MemWrite   = (uint8_t) 1;  // write to memory for stores
+            }else sDE->CTRL.RegWrite = (uint8_t) 1;  // else write a register
+            if(sDE->op == LW){
+                sDE->CTRL.MemtoReg   = (uint8_t) 1;  // if a load write memory to register
+                sDE->CTRL.MemRead    = (uint8_t) 1;  // read memory for loads
+            }
+            sDE->CTRL.ALUsrc         = (uint8_t) 1;  // Get immediate field
         }
     }
 }
@@ -177,14 +227,10 @@ void execute(){
     }else{
        ALU2 = sEM->immed;
     }
-    // determine ALU operation
+    if(sEM->MI == NOP)return;
+    // determineALU operation
     if(sEM->op == 0){ // R Type
       switch(sEM->funct){
-        case JR:
-            printf("JR Instruction\n");
-            sEM->ALU_result = ALU1; // will use this value to set PC to address
-//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-            break;
         case MOVN:
             printf("MOVN Instruction\n");
             if(ALU2 != 0){
@@ -204,14 +250,6 @@ void execute(){
 //            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case XOR:
-            printf("XOR Instruction\n");
-            sEM->ALU_result = ALU1 ^ ALU2;
-//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-            break;
-        case ADD: 
-            printf("ADD Instruction\n");
-            sEM->ALU_result = ALU1 | ALU2;
-//            printf("sEM->ALU_result: %x\n",sEM->ALU_result);
             break;
         case ADDU: 
             printf("ADDU Instruction\n");
@@ -274,17 +312,6 @@ void execute(){
       }
     }else{
         switch(sEM->op){
-            case J:
-                printf("J Instruction\n");
-                sEM->ALU_result =((sEM->pc+4)&0xf000000)|(sEM->addrs<<2);
-//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-                break;
-            case JAL:
-                printf("JAL Instruction\n");
-                sEM->ALU_result =((sEM->pc+4)&0xf000000)|(sEM->addrs<<2);
-                regFile[$ra] = sEM->pc + 8;
-//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-                break;
             case ADDI:
                 printf("ADDI Instruction\n");
                 sEM->ALU_result = (ALU1) + (ALU2);
@@ -299,52 +326,6 @@ void execute(){
                 printf("ANDI Instruction\n");
                 sEM->ALU_result = ALU1 & ALU2;
 //                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-                break;
-            case BEQ: 
-                printf("BEQ Instruction\n");
-                if(ALU1 == ALU2){
-                  sEM->ALU_zero = 1;
-                  sEM->ALU_result = (sEM->pc + 4) + (ALU2>>2);
-                }else{
-                  sEM->ALU_zero = 0;
-                }
-//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-                break;
-            case BGTZ: 
-                printf("BGTZ Instruction\n");
-                if(ALU1 > 0){
-                  sEM->ALU_zero = 1;
-                }else{
-                  sEM->ALU_zero = 0;
-                }
-//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-                break;
-            case BLEZ: 
-                printf("BLEZ Instruction\n");
-                if(ALU1 <= 0){
-                  sEM->ALU_zero = 1;
-                }else{
-                  sEM->ALU_zero = 0;
-                }
-//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-                break;
-            case BLTZ: 
-                printf("BLTZ Instruction\n");
-                if(ALU1 < 0){
-                  sEM->ALU_zero = 1;
-                }else{
-                  sEM->ALU_zero = 0;
-                }
-//                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
-                break;
-            case BNE:
-                printf("BNE Instruction\n");
-                if(ALU1 != ALU2){
-                  sEM->ALU_zero = 1;
-                }else{
-                  sEM->ALU_zero = 0;
-                }
-//               printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case LW:
                 printf("LW Instruction\n");
@@ -383,10 +364,12 @@ void execute(){
                 }else{
                    sEM->ALU_result == 0;
                 }
- //               printf("sEM->ALU_result: %x\n",sEM->ALU_result);
+//               printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
       }
     }
+    printf("instruction sEM->pc: 0x%x\n", sEM->pc);
+    printf("actual PC: 0x%x\n", *PC);
 }
 
 void memory(){
@@ -418,6 +401,7 @@ void memory(){
     sMW->CTRL.RegWrite   = EM->CTRL.RegWrite;
     sMW->CTRL.Branch     = EM->CTRL.Branch;
     sMW->CTRL.Jump       = EM->CTRL.Jump;
+    if(sMW->MI == NOP)return;
     //check control lines
     if((sMW->CTRL.MemWrite == 0) && (sMW->CTRL.MemRead == 0)){
         return;
@@ -446,9 +430,10 @@ void memory(){
 }
 
 void writeBack(){
+    if(sMW->MI == NOP)return;
     //check the control lines
     if( (MW->CTRL.MemtoReg == 0) && (MW->CTRL.RegDst == 0)){
-        // MW->ALU_result is write data
+        // MW->ALU_result --> REGFILE
         // MW->rt is destination reg
         if(!(MW->CTRL.Jump)){
            regFile[MW->rt] = MW->ALU_result;
@@ -600,6 +585,14 @@ void printPipeLine(){
     printf("FD->RD2: 0x%x\n",         FD->RD2);
     printf("FD->WD: 0x%x\n",          FD->WD);
     printf("FD->RD: 0x%x\n",          FD->RD);
+    printf("FD->ALU_result: 0x%x\n",  FD->ALU_result);
+    printf("FD->ALU_zero: 0x%x\n",    FD->ALU_zero);
+    // DE
+    printf("DE->pc: 0x%x\n",          DE->pc);
+    printf("DE->op: 0x%x\n",          DE->op);
+    printf("DE->rs: 0x%x\n",          DE->rs);
+    printf("DE->rt: 0x%x\n",          DE->rt);
+    printf("DE->rd: 0x%x\n",          DE->rd);
     printf("FD->ALU_result: 0x%x\n",  FD->ALU_result);
     printf("FD->ALU_zero: 0x%x\n",    FD->ALU_zero);
     // DE
