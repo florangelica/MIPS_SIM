@@ -101,7 +101,7 @@ void mem2cache(int ID, uint32_t addr, int blkNum){
     // ID == 0 --> Dcache
     // shift address into cache fields
     // only fetch block aligned address
-    addr = getBlkAddr(addr);
+    //addr = getBlkAddr(addr);
 //    printf("addr of cache:                       %x\n",addr);
     indx = getIndx(addr);
 

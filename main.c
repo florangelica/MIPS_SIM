@@ -16,6 +16,7 @@ int main (){
     // init values
     *PC = (uint32_t) iMem[5];
     printf("PC: 0x%x\n", *PC);
+    printf("iMem[*PC]: 0x%x\n", iMem[*PC]);
 /*  regFile[$sp] = iMem[0];
     regFile[$fp] = iMem[1];
     regFile[$s0] = 0xffffffff;
