@@ -20,7 +20,7 @@ void fetch(){
 void hazards(){
     // local control lines
     // set forwarding control lines
-    if(sDE->CTRL.Branch)return;
+    if((sDE->CTRL.Branch) || (sDE->MI == NOP))return;
     uint8_t emDest, mwDest;
     if (sEM->CTRL.RegDst == 1){
         emDest=sEM->rd;
@@ -59,6 +59,9 @@ void hazards(){
         }else{
             printf("forward ALU_result\n");
             sDE->RD2 = sEM->ALU_result;
+            if(sDE->op == SW){
+              sDE->WD = regFile[sDE->RD2];
+            }
         }
     }
 
@@ -79,6 +82,9 @@ void hazards(){
             sDE->RD2 = sMW->RD;
         }else{
             sDE->RD2 = sMW->ALU_result;
+            if(sDE->op == SW){
+              sDE->WD = regFile[sDE->RD2];
+            }
         }
     }
 }
@@ -307,7 +313,7 @@ void decode(){
             sDE->RD1   = (uint32_t) regFile[sDE->rs];
             sDE->RD2   = (uint32_t) regFile[sDE->rt];
             if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
-                sDE->WD = sDE->RD2;
+                sDE->WD = regFile[sDE->RD2];
             }
             // ----- Set Control Lines -----
             if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
@@ -355,6 +361,10 @@ void execute(){
     sEM->CTRL.Branch     = DE->CTRL.Branch;
     sEM->CTRL.Jump       = DE->CTRL.Jump;
     printf("EXECUTING: *PC = %d, sEM->MI: 0x%x\n",sEM->pc,  sEM->MI);
+    if(sEM->MI == NOP){
+      printf("NOP INMSTRUCTION\n");
+      return;
+    }
     // determine ALU values
     int32_t ALU1 = sEM->RD1;
     int32_t ALU2;
@@ -362,10 +372,6 @@ void execute(){
        ALU2 = (int32_t)sEM->RD2; 
     }else{
        ALU2 = sEM->immed;
-    }
-    if(sEM->MI == NOP){
-      printf("NOP INMSTRUCTION\n");
-      return;
     }
     // determineALU operation
     if(sEM->op == 0){ // R Type
