@@ -16,5 +16,6 @@ void printCTRL();
 void clearPipe();
 void clearCTRL();
 void hazards();
+void brHazards();
 
 #endif

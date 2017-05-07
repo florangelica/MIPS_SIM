@@ -46,12 +46,17 @@ int main (){
     printf("WRITEBACK STAGE\n");
     writeBack();
 */
+    int i = 0;
     while(*PC != 0){
+      if(i ==260){
+          printf("i is 260");
+      }
       if(*PC == 209){
         printf("jump to end of program  \n");
       }
-      if(*PC == 10){
+      if(*PC == 150){
         printf("copy array");
+        i =0;
       }
       if(*PC == 30){
         printf("bubble sort");
@@ -74,6 +79,7 @@ int main (){
         shadowShift();
 //        printPipe(MW);
         *CLK = *CLK + 1;
+        i++;
     }
     //clear heap memory
     freeMemory();

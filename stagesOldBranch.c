@@ -18,9 +18,9 @@ void fetch(){
     sFD->pc =*PC;
 }
 void hazards(){
+    printf("forwarding enabled\n");
     // local control lines
     // set forwarding control lines
-    if(sDE->CTRL.Branch)return;
     uint8_t emDest, mwDest;
     if (sEM->CTRL.RegDst == 1){
         emDest=sEM->rd;
@@ -82,78 +82,6 @@ void hazards(){
         }
     }
 }
-
-void brHazards(){
-    uint8_t deDest, emDest, mwDest;
-    if (DE->CTRL.RegDst == 1){
-        deDest=DE->rd;
-    }else{
-        deDest=DE->rt;
-    }
-    if (EM->CTRL.RegDst == 1){
-        emDest=EM->rd;
-    }else{
-        emDest=EM->rt;
-    }
-    if (MW->CTRL.RegDst == 1){
-        mwDest=MW->rd;
-    }else{
-        emDest=MW->rt;
-    }
-
-    // branch depends on the instruction one ahead
-    if( (DE->CTRL.RegWrite == 1) && !(deDest==0) && (deDest == sDE->rs || deDest == sDE->rt) ){
-        // insert a bubble
-        *PC = sFD->pc;
-        sFD->MI = sDE->MI;
-        sFD->pc = sDE->pc;
-        sDE->MI = NOP;
-        return;
-    }
-    // branch depends on instruction two ahead
-    if((EM->CTRL.RegWrite == 1) && !(emDest==0) && (emDest == sDE->rs)){
-        if(EM->op == LW){
-            // insert a bubble
-            *PC = sFD->pc;
-            sFD->MI = sDE->MI;
-            sFD->pc = sDE->pc;
-            sDE->MI = NOP;
-            return;
-        }else{
-            sDE->RD1 = EM->ALU_result;
-            return;
-        }
-    }else if((EM->CTRL.RegWrite == 1) && !(emDest==0) && (emDest == sDE->rt)){
-        if(EM->op == LW){
-            // insert a bubble
-            *PC = sFD->pc;
-            sFD->MI = sDE->MI;
-            sFD->pc = sDE->pc;
-            sDE->MI = NOP;
-            return;
-        }else{
-            sDE->RD2 = EM->ALU_result;
-            return;
-        }
-    }
-    // branch depends on instruction three ahead
-    if((MW->CTRL.RegWrite == 1) && !(mwDest==0) && (mwDest == sDE->rs)){
-        if(MW->op == LW){
-            sDE->RD1 = MW->RD;
-            return;
-        }
-        
-
-    }else if((EM->CTRL.RegWrite == 1) && !(emDest==0) && (emDest == sDE->rt)){
-        if(MW->op == LW){
-            sDE->RD2 = MW->RD;
-            return;
-        }
-    }
-}
-
-
-
 // Input: FD
 // Output: sDE
 void decode(){
@@ -219,10 +147,9 @@ void decode(){
             if(0x00008000 & (sDE->immed)){
                sDE->immed += 0xffff0000;
             }
+
             sDE->RD1   = (uint32_t) regFile[sDE->rs];
             sDE->RD2   = (uint32_t) regFile[sDE->rt];
-            brHazards();
-            if(sDE->MI == NOP)return;
             switch(sDE->op){
                 case BEQ:
                   if((sDE->RD1) == (sDE->RD2)){
