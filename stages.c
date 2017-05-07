@@ -22,20 +22,21 @@ void hazards(){
     // local control lines
     // set forwarding control lines
     uint8_t emDest, mwDest;
-    if (EM->CTRL.RegDst == 1){
-        emDest=EM->rd;
+    if (sEM->CTRL.RegDst == 1){
+        emDest=sEM->rd;
     }else{
-        emDest=EM->rt;
+        emDest=sEM->rt;
     }
-    if (MW->CTRL.RegDst == 1){
-        mwDest=MW->rd;
+    if (sMW->CTRL.RegDst == 1){
+        mwDest=sMW->rd;
     }else{
-        mwDest=MW->rt;
+        mwDest=sMW->rt;
     }
 
     // EX hazard
-    if( (EM->CTRL.RegWrite == 1) && !(emDest==0) && (emDest == sDE->rs) ){
+    if( (sEM->CTRL.RegWrite == 1) && !(emDest==0) && (emDest == sDE->rs) ){
         if(sEM->op == LW){
+            printf("insert a bubble\n");
             // insert a bubble
             *PC = sFD->pc;
             sFD->MI = sDE->MI;
@@ -43,38 +44,41 @@ void hazards(){
             sDE->MI = NOP;
 
         }else{
-            sDE->RD1 = EM->ALU_result;
+            printf("forward ALU_result\n");
+            sDE->RD1 = sEM->ALU_result;
         }
     }
-    if( (EM->CTRL.RegWrite == 1) && !(emDest==0) && (emDest == sDE->rt) ){
-        if(sDE->op == LW){
+    if( (sEM->CTRL.RegWrite == 1) && !(emDest==0) && (emDest == sDE->rt) ){
+        if(sEM->op == LW){
             // insert a bubble
+            printf("insert a bubble\n");
             *PC = sFD->pc;
             sFD->MI = sDE->MI;
             sFD->pc = sDE->pc;
             sDE->MI = NOP;
         }else{
-            sDE->RD2 = EM->ALU_result;
+            printf("forward ALU_result\n");
+            sDE->RD2 = sEM->ALU_result;
         }
     }
 
     // MEM hazard
-    if( (MW->CTRL.RegWrite == 1) && !(mwDest==0) && (mwDest == sDE->rs) && !(EM->CTRL.RegWrite && !(emDest==0) && !(emDest == sDE->rs))){
+    if( (sMW->CTRL.RegWrite == 1) && !(mwDest==0) && (mwDest == sDE->rs) && !(sEM->CTRL.RegWrite && !(emDest==0) && !(emDest == sDE->rs))){
         // 2 options MW->RD or MW->ALU_result
         // TODO: add LB and LHW to the conditional
-        if(MW->op == LW){
-            sDE->RD1 = MW->RD;
+        if(sMW->op == LW){
+            sDE->RD1 = sMW->RD;
         }else{
-            sDE->RD1 = MW->ALU_result;
+            sDE->RD1 = sMW->ALU_result;
         }
     }
-    if( (MW->CTRL.RegWrite == 1) && !(mwDest==0) && (mwDest == sDE->rt) && !(EM->CTRL.RegWrite && !(emDest==0) && !(emDest == sDE->rt))){
+    if( (sMW->CTRL.RegWrite == 1) && !(mwDest==0) && (mwDest == sDE->rt) && !(sEM->CTRL.RegWrite && !(emDest==0) && !(emDest == sDE->rt))){
         // 2 options MW->RD or ALU_result
         // TODO: add LB and LHW to the conditional
-        if(MW->op == LW){
-            sDE->RD2 = MW->RD;
+        if(sMW->op == LW){
+            sDE->RD2 = sMW->RD;
         }else{
-            sDE->RD2 = MW->ALU_result;
+            sDE->RD2 = sMW->ALU_result;
         }
     }
 }
@@ -125,8 +129,8 @@ void decode(){
             sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
             *PC = ((*PC + 1)&0xf0000000)|(sDE->addrs);
             // insert bubbles
-            sFD->MI = (uint32_t) NOP;
-            clearCTRL(sFD);
+            //sFD->MI = (uint32_t) NOP;
+            //clearCTRL(sFD);
             sDE->MI = (uint32_t) NOP;
             clearCTRL(sDE);
             if(sDE->op == JAL){
@@ -145,7 +149,6 @@ void decode(){
             }
             sDE->RD1   = (uint32_t) regFile[sDE->rs];
             sDE->RD2   = (uint32_t) regFile[sDE->rt];
-            hazards();
             switch(sDE->op){
                 case BEQ:
                   if((sDE->RD1) == (sDE->RD2)){
@@ -174,8 +177,8 @@ void decode(){
                   break;
             }
             if(sDE->ALU_zero == 1){
-              sFD->MI = (uint32_t) NOP;
-              clearCTRL(sFD);
+             // sFD->MI = (uint32_t) NOP;
+             // clearCTRL(sFD);
               sDE->MI = (uint32_t) NOP;
               clearCTRL(sDE);
               *PC =((sDE->pc) +1) + (int32_t)sDE->immed;
@@ -199,7 +202,6 @@ void decode(){
                 sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
                 sDE->funct = (uint8_t) (FD->MI  & 0x3f);
                 sDE->RD1 = sDE->rs;
-                hazards();
                 *PC = regFile[sDE->RD1];
                 sFD->MI = (uint32_t) NOP;
                 clearCTRL(sFD);
@@ -215,7 +217,6 @@ void decode(){
                 sDE->CTRL.RegDst     = (uint8_t) 1;
             } // SLL and SRL use rt as destination
             sDE->CTRL.RegWrite   = (uint8_t) 1;
-            hazards();
         //I TYPE
         }else{
             *PC = *PC + 1;
@@ -231,7 +232,6 @@ void decode(){
             }
             sDE->RD1   = (uint32_t) regFile[sDE->rs];
             sDE->RD2   = (uint32_t) regFile[sDE->rt];
-            hazards();
             if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
                 sDE->WD = sDE->RD2;
             }
@@ -280,7 +280,7 @@ void execute(){
     sEM->CTRL.RegWrite   = DE->CTRL.RegWrite;
     sEM->CTRL.Branch     = DE->CTRL.Branch;
     sEM->CTRL.Jump       = DE->CTRL.Jump;
-    printf("EXECUTING: sEM->MI: 0x%x\n", sEM->MI);
+    printf("EXECUTING: *PC = %d, sEM->MI: 0x%x\n",sEM->pc,  sEM->MI);
     // determine ALU values
     int32_t ALU1 = sEM->RD1;
     int32_t ALU2;
@@ -289,7 +289,10 @@ void execute(){
     }else{
        ALU2 = sEM->immed;
     }
-    if(sEM->MI == NOP)return;
+    if(sEM->MI == NOP){
+      printf("NOP INMSTRUCTION\n");
+      return;
+    }
     // determineALU operation
     if(sEM->op == 0){ // R Type
       switch(sEM->funct){

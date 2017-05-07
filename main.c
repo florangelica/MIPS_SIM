@@ -47,14 +47,20 @@ int main (){
     writeBack();
 */
     while(*PC != 0){
-      if(*PC == 150){
-        printf("copy array");
-      }
       if(*PC == 209){
-        printf("jr");
+        printf("jump to end of program  \n");
       }
       if(*PC == 10){
-        printf("shit DIDNT broke");
+        printf("copy array");
+      }
+      if(*PC == 30){
+        printf("bubble sort");
+      }
+      if(*PC == 70){
+        printf("insertion sort");
+      }
+      if(*PC == 120){
+        printf("check_result");
       }
         fetch();
 //        printPipe(FD);
@@ -64,6 +70,7 @@ int main (){
         execute();
 //        printPipe(EM);
         memory();
+        hazards();
         shadowShift();
 //        printPipe(MW);
         *CLK = *CLK + 1;
