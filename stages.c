@@ -98,7 +98,7 @@ void brHazards(){
     if (MW->CTRL.RegDst == 1){
         mwDest=MW->rd;
     }else{
-        emDest=MW->rt;
+        mwDest=MW->rt;
     }
 
     // branch depends on the instruction one ahead
