@@ -6,8 +6,8 @@
 
 // Memory functions
 void initCache(){
-    Icache = (struct SET *) malloc(I_CS * sizeof(struct SET));
-    Dcache = (struct SET *) malloc(D_CS * sizeof(struct SET));
+    Icache = (struct I_SET *) malloc(I_CS * sizeof(struct I_SET));
+    Dcache = (struct D_SET *) malloc(D_CS * sizeof(struct D_SET));
 }
 void freeCache(){
     free(Icache);
@@ -15,33 +15,50 @@ void freeCache(){
 }
 
 // utility functions
-uint32_t getTag(uint32_t addr){
-    return addr >> (IDX_LEN+BYO_LEN+BLO_LEN);
+uint32_t getTag(int ID, uint32_t addr){
+    if(ID){
+        return addr >> (I_IDX_LEN+I_BYO_LEN+I_BLO_LEN);
+    }else{
+        return addr >> (D_IDX_LEN+D_BYO_LEN+D_BLO_LEN);
+    }
+        
 }
-uint32_t getIndx(uint32_t addr){
-    return (addr << TAG_LEN)>>(TAG_LEN+BYO_LEN+BLO_LEN);
+uint32_t getIndx(int ID, uint32_t addr){
+    if(ID){
+        return (addr << I_TAG_LEN)>>(I_TAG_LEN+I_BYO_LEN+I_BLO_LEN);
+    }else{
+        return (addr << D_TAG_LEN)>>(D_TAG_LEN+D_BYO_LEN+D_BLO_LEN);
+    }
 }
-uint32_t getBlkOff(uint32_t addr){
-    return (addr << TAG_LEN+IDX_LEN)>>(TAG_LEN+IDX_LEN+BYO_LEN);
+uint32_t getBlkOff(int ID,uint32_t addr){
+    if(ID){
+        return (addr << I_TAG_LEN+I_IDX_LEN)>>(I_TAG_LEN+I_IDX_LEN+I_BYO_LEN);
+    }else{
+        return (addr << D_TAG_LEN+D_IDX_LEN)>>(D_TAG_LEN+D_IDX_LEN+D_BYO_LEN);
+    }
 }
-uint32_t getBlkAddr(uint32_t addr){
-    return (addr >> (BYO_LEN + BLO_LEN)) << (BYO_LEN+BLO_LEN);
+uint32_t getBlkAddr(int ID,uint32_t addr){
+    if(ID){
+        return (addr >> (I_BYO_LEN + I_BLO_LEN)) << (I_BYO_LEN+I_BLO_LEN);
+    }else{
+        return (addr >> (D_BYO_LEN + D_BLO_LEN)) << (D_BYO_LEN+D_BLO_LEN);
+    }
 }
 
 void nxtInSet(int ID, uint32_t addr){
-    uint32_t indx = getIndx(addr);
+    uint32_t indx = getIndx(ID,addr);
     // increment nxtBlk
     if(ID){
         // Icache
         Icache[indx].nxtBlk = Icache[indx].nxtBlk + 1;
-        if(Icache[indx].nxtBlk >= SET_ASS){
+        if(Icache[indx].nxtBlk >= I_SET_ASS){
             //reset to zero
             Icache[indx].nxtBlk = 0;
         }
     }else{
         // Dcache
         Dcache[indx].nxtBlk = Dcache[indx].nxtBlk + 1;
-        if(Dcache[indx].nxtBlk >= SET_ASS){
+        if(Dcache[indx].nxtBlk >= D_SET_ASS){
             //reset to zero
             Dcache[indx].nxtBlk = 0;
         }
@@ -55,12 +72,12 @@ int isHit(int ID, uint32_t addr){
     // miss return -1
     // ID == 0 --> Dcache
     uint32_t indx, tag, blkNum;
-    indx = getIndx(addr);
-    tag = getTag(addr);
+    indx = getIndx(ID,addr);
+    tag = getTag(ID,addr);
 
     if(ID){
         // go to index and compare tags
-        for( blkNum=0; blkNum<SET_ASS; blkNum++){
+        for( blkNum=0; blkNum<I_SET_ASS; blkNum++){
             if((Icache[indx].blk[blkNum].tag == tag)&&(Icache[indx].blk[blkNum].valid )){
                 #if isHitPrint
                 printf("isHit -- Icache: hit!\n");
@@ -76,7 +93,7 @@ int isHit(int ID, uint32_t addr){
     }else{
         //Dcache
         // go to index and compare tags
-        for( blkNum=0; blkNum<SET_ASS; blkNum++){
+        for( blkNum=0; blkNum<D_SET_ASS; blkNum++){
             if((Dcache[indx].blk[blkNum].tag == tag)&&(Dcache[indx].blk[blkNum].valid )){
                 #if isHitPrint
                 printf("isHit -- Dcache: hit!\n");
@@ -94,7 +111,7 @@ int isHit(int ID, uint32_t addr){
 
 
 
-#define mem2cachePrint 0
+#define mem2cachePrint 1
 void mem2cache(int ID, uint32_t addr, int blkNum){
     int i;
     uint32_t indx;
@@ -103,40 +120,40 @@ void mem2cache(int ID, uint32_t addr, int blkNum){
     // only fetch block aligned address
     //addr = getBlkAddr(addr);
 //    printf("addr of cache:                       %x\n",addr);
-    indx = getIndx(addr);
+    indx = getIndx(ID,addr);
 
     if(ID){
         //Icache
-        Icache[indx].blk[blkNum].tag = getTag(addr);
+        Icache[indx].blk[blkNum].tag = getTag(ID,addr);
         Icache[indx].blk[blkNum].valid = 1;
         Icache[indx].blk[blkNum].dirty = 0;
-        for( i=0; i<BLK_SIZE; i++){
-            Icache[indx].blk[blkNum].data[i] = iMem[addr+i];
+        for( i=0; i<I_BLK_SIZE; i++){
+            Icache[indx].blk[blkNum].data[I_BLK_SIZE-i-1] = iMem[addr+i];
         }
         #if mem2cachePrint
         printf("m2c -- indx of cache:                       %x\n",indx);
         printf("m2c -- Icache[indx].blk[blkNum].tag:        %x\n",Icache[indx].blk[blkNum].tag);
         printf("m2c -- Icache[indx].blk[blkNum].valid:      %x\n",Icache[indx].blk[blkNum].valid);
         printf("m2c -- Icache[indx].blk[blkNum].dirty:      %x\n",Icache[indx].blk[blkNum].dirty);
-        for( i=0; i<BLK_SIZE; i++){
+        for( i=0; i<I_BLK_SIZE; i++){
             printf("m2c -- Icache[indx].blk[blkNum].data[%d]:    %x\n",i,Icache[indx].blk[blkNum].data[i]);
         }
         #endif
     }else{
         // Dcache
-        Dcache[indx].blk[blkNum].tag = getTag(addr);
+        Dcache[indx].blk[blkNum].tag = getTag(ID,addr);
         Dcache[indx].blk[blkNum].valid = 1;
         Dcache[indx].blk[blkNum].dirty = 0;
         Dcache[indx].blk[blkNum].blkAddr = addr;
-        for( i=0; i<BLK_SIZE; i++){
-            Dcache[indx].blk[blkNum].data[i] = iMem[addr+i];
+        for( i=0; i<D_BLK_SIZE; i++){
+            Dcache[indx].blk[blkNum].data[D_BLK_SIZE-i-1] = iMem[addr+i];
         }
         #if mem2cachePrint
         printf("m2c -- indx of cache:                       %x\n",indx);
         printf("m2c -- Dcache[indx].blk[blkNum].tag:        %x\n",Dcache[indx].blk[blkNum].tag);
         printf("m2c -- Dcache[indx].blk[blkNum].valid:      %x\n",Dcache[indx].blk[blkNum].valid);
         printf("m2c -- Dcache[indx].blk[blkNum].dirty:      %x\n",Dcache[indx].blk[blkNum].dirty);
-        for( i=0; i<BLK_SIZE; i++){
+        for( i=0; i<D_BLK_SIZE; i++){
             printf("m2c -- Dcache[indx].blk[blkNum].data[%d]:    %x\n",i,Dcache[indx].blk[blkNum].data[i]);
         }
         #endif
@@ -149,7 +166,7 @@ void mem2cache(int ID, uint32_t addr, int blkNum){
 void cache2mem(){
     // move contents of WR_buf to memory
     int i;
-    for( i=0; i<BLK_SIZE; i++){
+    for( i=0; i<D_BLK_SIZE; i++){
         iMem[WR_buf.blkAddr + i] = WR_buf.data[i];
     }
 }
@@ -159,7 +176,7 @@ void cache2mem(){
 uint32_t getBlock(int ID, uint32_t addr){
     int val = isHit(ID,addr);
     if(val == -1){
-        uint32_t indx = getIndx(addr);
+        uint32_t indx = getIndx(ID,addr);
         uint32_t blkNum;
         // miss
         // determine which blk of the set data should be moved into
@@ -178,7 +195,7 @@ uint32_t getBlock(int ID, uint32_t addr){
                 // move block to WR_buf
                 int i;
                 WR_buf.blkAddr = Dcache[indx].blk[blkNum].blkAddr;
-                for(i=0; i <BLK_SIZE; i++){
+                for(i=0; i <D_BLK_SIZE; i++){
                     WR_buf.data[i] = Dcache[indx].blk[blkNum].data[i];
                 }
                 //call move WR_buf to memory
@@ -198,9 +215,9 @@ uint32_t getBlock(int ID, uint32_t addr){
 void pipe2mem(uint32_t addr, uint32_t word ){
     if(CACHE_ON){
         int i;
-        uint32_t indx = getIndx(addr);
-        uint32_t blkOff = getBlkOff(addr);
-        int blkNum = getBlock(0,addr);
+        uint32_t indx = getIndx(D,addr);
+        uint32_t blkOff = getBlkOff(D,addr);
+        int blkNum = getBlock(D,addr);
         // write word into cache
         Dcache[indx].blk[blkNum].data[blkOff] = word;
         #if p2mPrint
@@ -208,7 +225,7 @@ void pipe2mem(uint32_t addr, uint32_t word ){
         printf("Dcache[indx].blk[blkNum].tag:        %x\n",Dcache[indx].blk[blkNum].tag);
         printf("Dcache[indx].blk[blkNum].valid:      %x\n",Dcache[indx].blk[blkNum].valid);
         printf("Dcache[indx].blk[blkNum].dirty:      %x\n",Dcache[indx].blk[blkNum].dirty);
-        for( i=0; i<BLK_SIZE; i++){
+        for( i=0; i<D_BLK_SIZE; i++){
             printf("Dcache[indx].blk[blkNum].data[%d]:    %x\n",i,Dcache[indx].blk[blkNum].data[i]);
         }
         #endif
@@ -218,7 +235,7 @@ void pipe2mem(uint32_t addr, uint32_t word ){
             printf("writeback enabled\n");
         }else{
             // write through
-            for(i=0; i<BLK_SIZE; i++){
+            for(i=0; i<D_BLK_SIZE; i++){
                 WR_buf.data[i] = Dcache[indx].blk[blkNum].data[i];
             }
             // push WR_buf to memory
@@ -236,8 +253,8 @@ void pipe2mem(uint32_t addr, uint32_t word ){
 void mem2pipe(int ID, uint32_t addr){
     // ID dictates I cache or D cache
     // ID = 0 --> Dcache
-    uint32_t indx = getIndx(addr);
-    uint32_t blkOff = getBlkOff(addr);
+    uint32_t indx = getIndx(ID,addr);
+    uint32_t blkOff = getBlkOff(ID,addr);
     uint32_t blkNum;
     #if mem2pipePrint
     printf("m2p -- index = %x\n",indx);
@@ -268,14 +285,14 @@ void mem2pipe(int ID, uint32_t addr){
 
 void flush( uint32_t addr){
     //get block aligned address 
-    uint32_t indx = getIndx(addr);
+    uint32_t indx = getIndx(D,addr);
     uint32_t blkNum,i;
     // Dcache
-    for( blkNum=0; blkNum<SET_ASS; blkNum++){
+    for( blkNum=0; blkNum<D_SET_ASS; blkNum++){
         if(Dcache[indx].blk[blkNum].valid){
             printf("flush -- Dcache: valid data to flush\n");
             WR_buf.blkAddr = Dcache[indx].blk[blkNum].blkAddr;
-            for(i=0; i<BLK_SIZE; i++){
+            for(i=0; i<D_BLK_SIZE; i++){
                 WR_buf.data[i] = Dcache[indx].blk[blkNum].data[i];
             }
             cache2mem();
