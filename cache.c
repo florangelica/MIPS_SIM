@@ -94,7 +94,7 @@ int isHit(int ID, uint32_t addr){
 
 
 
-#define mem2cachePrint 1
+#define mem2cachePrint 0
 void mem2cache(int ID, uint32_t addr, int blkNum){
     int i;
     uint32_t indx;

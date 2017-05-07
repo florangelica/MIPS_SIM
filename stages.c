@@ -5,7 +5,6 @@
 #include"stages.h"
 #include"cache.h"
 
-#define FORWARD 0
 
 // Input: PC, iMem
 // Output: sFD
@@ -15,31 +14,74 @@ void fetch(){
     clearCTRL(sFD);
     // get instruction from iMem
     mem2pipe(1,*PC);
-    printf("sFD->MI: 0x%x: ", sFD->MI);
+    printf("FETCH: *PC = %d, sFD->MI = 0x%x: ",*PC,  sFD->MI);
     sFD->pc =*PC;
 }
 void hazards(){
-#if FORWARD
     printf("forwarding enabled\n");
     // local control lines
-    uint16_t forwardA=0x00;
-    uint16_t forwardB=0x00;
-
     // set forwarding control lines
+    uint8_t emDest, mwDest;
+    if (EM->CTRL.RegDst == 1){
+        emDest=EM->rd;
+    }else{
+        emDest=EM->rt;
+    }
+    if (MW->CTRL.RegDst == 1){
+        mwDest=MW->rd;
+    }else{
+        mwDest=MW->rt;
+    }
+
     // EX hazard
-    if( (EM->CTRL.RegWrite == 1) && !(EM->rd) && (EM->rd == sDE->rs) )forwardA = 0x10;
-    if( (EM->CTRL.RegWrite == 1) && !(EM->rd) && (EM->rd == sDE->rt) )forwardB = 0x10;
+    if( (EM->CTRL.RegWrite == 1) && !(emDest==0) && (emDest == sDE->rs) ){
+        if(sEM->op == LW){
+            // insert a bubble
+            *PC = sFD->pc;
+            sFD->MI = sDE->MI;
+            sFD->pc = sDE->pc;
+            sDE->MI = NOP;
+
+        }else{
+            sDE->RD1 = EM->ALU_result;
+        }
+    }
+    if( (EM->CTRL.RegWrite == 1) && !(emDest==0) && (emDest == sDE->rt) ){
+        if(sDE->op == LW){
+            // insert a bubble
+            *PC = sFD->pc;
+            sFD->MI = sDE->MI;
+            sFD->pc = sDE->pc;
+            sDE->MI = NOP;
+        }else{
+            sDE->RD2 = EM->ALU_result;
+        }
+    }
+
     // MEM hazard
-    if( (MW->CTRL.RegWrite == 1) && !(MW->rd) && (MW->rd == sDE->rs) && !(EM->CTRL.RegWrite && !(EM->rd==0) && !(EM->rd == sDE->rs)))forwardA = 0x01;
-    if( (MW->CTRL.RegWrite == 1) && !(MW->rd) && (MW->rd == sDE->rt) && !(EM->CTRL.RegWrite && !(EM->rd==0) && !(EM->rd == sDE->rt)))forwardB = 0x01;
-    // use control lines to forward values
-#else
-    printf("forwarding disabled\n");
-#endif
+    if( (MW->CTRL.RegWrite == 1) && !(mwDest==0) && (mwDest == sDE->rs) && !(EM->CTRL.RegWrite && !(emDest==0) && !(emDest == sDE->rs))){
+        // 2 options MW->RD or MW->ALU_result
+        // TODO: add LB and LHW to the conditional
+        if(MW->op == LW){
+            sDE->RD1 = MW->RD;
+        }else{
+            sDE->RD1 = MW->ALU_result;
+        }
+    }
+    if( (MW->CTRL.RegWrite == 1) && !(mwDest==0) && (mwDest == sDE->rt) && !(EM->CTRL.RegWrite && !(emDest==0) && !(emDest == sDE->rt))){
+        // 2 options MW->RD or ALU_result
+        // TODO: add LB and LHW to the conditional
+        if(MW->op == LW){
+            sDE->RD2 = MW->RD;
+        }else{
+            sDE->RD2 = MW->ALU_result;
+        }
+    }
 }
 // Input: FD
 // Output: sDE
 void decode(){
+    printf("DECODE\n");
     // Clean shadow register
     clearPipe(sDE);
     clearCTRL(sDE);
@@ -73,29 +115,27 @@ void decode(){
     sDE->CTRL.Jump       = FD->CTRL.Jump;
 
     if(sDE->MI == NOP){
+        *PC = *PC+1;
         return;
     }else{
         sDE->op =(uint8_t) (FD->MI >> 26);
         // JUMP
-        if((sDE->op == J) || (sDE->op == JR) || (sDE->op == JAL)){
-//        printf("J-Type - op code: 0x%x\n", sDE->op);
-            if(!(sDE->op)){// set target
-               sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
-               *PC = ((*PC + 4)&0xf0000000)|((sDE->addrs)<<2);
-               // insert bubbles
-               sFD->MI = (uint32_t) NOP;
-               sDE->MI = (uint32_t) NOP;
-               if(sDE->op == JAL){
-                   regFile[$ra] = *PC + 8;
-               }
-            }else if(sDE->funct == JR){
-                // decode fields
-                sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
-                sDE->funct = (uint8_t) (FD->MI  & 0x3f);
-                *PC = regFile[sDE->rs];
+        if((sDE->op == J) || (sDE->op == JAL)){
+            //  printf("J-Type - op code: 0x%x\n", sDE->op);
+            sDE->addrs = (uint32_t) (FD->MI & 0x03fffffff);
+            *PC = ((*PC + 1)&0xf0000000)|(sDE->addrs);
+            // insert bubbles
+            sFD->MI = (uint32_t) NOP;
+            clearCTRL(sFD);
+            sDE->MI = (uint32_t) NOP;
+            clearCTRL(sDE);
+            if(sDE->op == JAL){
+                regFile[$ra] = *PC + 2;
             }
+            return;
             // BRANCH
         }else if((sDE->op==BEQ)||(sDE->op==BNE)||(sDE->op==BLEZ)||(sDE->op==BLTZ)||(sDE->op==BGTZ) ){
+            sDE->CTRL.Branch = 1;
             sDE->ALU_zero = 0;
             sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
             sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
@@ -105,6 +145,7 @@ void decode(){
             }
             sDE->RD1   = (uint32_t) regFile[sDE->rs];
             sDE->RD2   = (uint32_t) regFile[sDE->rt];
+            hazards();
             switch(sDE->op){
                 case BEQ:
                   if((sDE->RD1) == (sDE->RD2)){
@@ -133,12 +174,17 @@ void decode(){
                   break;
             }
             if(sDE->ALU_zero == 1){
-              *PC =((sDE->pc) +4) + (int32_t)sDE->immed;
+              sFD->MI = (uint32_t) NOP;
+              clearCTRL(sFD);
+              sDE->MI = (uint32_t) NOP;
+              clearCTRL(sDE);
+              *PC =((sDE->pc) +1) + (int32_t)sDE->immed;
             }else{
-              *PC = *PC+4;
+              *PC = *PC+1;
             }
+            return;
         }else if(sDE->op == 0){
-            *PC = *PC + 4;
+            *PC = *PC + 1;
 //        printf("R-Type \n");
         // ----- Set Pipe Fields -----
             sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
@@ -148,6 +194,19 @@ void decode(){
             }
             sDE->shamt = (uint8_t) ((FD->MI >> 6) & 0x1f);
             sDE->funct = (uint8_t) (FD->MI  & 0x3f);
+            if(sDE->funct == JR){
+                // decode fields
+                sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
+                sDE->funct = (uint8_t) (FD->MI  & 0x3f);
+                sDE->RD1 = sDE->rs;
+                hazards();
+                *PC = regFile[sDE->RD1];
+                sFD->MI = (uint32_t) NOP;
+                clearCTRL(sFD);
+                sDE->MI = (uint32_t) NOP;
+                clearCTRL(sDE);
+                return;
+            }
             // set RD1 and RD2
             sDE->RD1   = (uint32_t) regFile[sDE->rs];
             sDE->RD2   = (uint32_t) regFile[sDE->rt];
@@ -156,10 +215,11 @@ void decode(){
                 sDE->CTRL.RegDst     = (uint8_t) 1;
             } // SLL and SRL use rt as destination
             sDE->CTRL.RegWrite   = (uint8_t) 1;
+            hazards();
         //I TYPE
         }else{
-            *PC = *PC + 4;
-        printf("I-Type\n");
+            *PC = *PC + 1;
+//        printf("I-Type\n");
             // ----- Set Pipe Fields 
             sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
             sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
@@ -171,6 +231,7 @@ void decode(){
             }
             sDE->RD1   = (uint32_t) regFile[sDE->rs];
             sDE->RD2   = (uint32_t) regFile[sDE->rt];
+            hazards();
             if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
                 sDE->WD = sDE->RD2;
             }
@@ -219,6 +280,7 @@ void execute(){
     sEM->CTRL.RegWrite   = DE->CTRL.RegWrite;
     sEM->CTRL.Branch     = DE->CTRL.Branch;
     sEM->CTRL.Jump       = DE->CTRL.Jump;
+    printf("EXECUTING: sEM->MI: 0x%x\n", sEM->MI);
     // determine ALU values
     int32_t ALU1 = sEM->RD1;
     int32_t ALU2;
@@ -318,7 +380,7 @@ void execute(){
 //                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case ADDIU:
-                printf("ADDIU Instruction\n");
+                printf("ADDIU Instruction: ALU1:%x  ALU2: %x \n",ALU1,ALU2);
                 sEM->ALU_result = (uint32_t)ALU1 + (uint32_t)ALU2;
 //                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
@@ -333,9 +395,9 @@ void execute(){
 //                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case SW:
-                printf("SW Instruction\n");
+                printf("SW Instruction: ALU1:%x  ALU2: %x \n",ALU1,ALU2);
                 sEM->ALU_result = (uint32_t) ALU1 + ALU2;
-                printf("location calculated\n: 0x%x\n", sEM->ALU_result);
+                printf("location calculated: 0x%x\n", sEM->ALU_result);
 //                printf("sEM->ALU_result: %x\n",sEM->ALU_result);
                 break;
             case ORI:
@@ -368,11 +430,12 @@ void execute(){
                 break;
       }
     }
-    printf("instruction sEM->pc: 0x%x\n", sEM->pc);
-    printf("actual PC: 0x%x\n", *PC);
+//    printf("instruction sEM->pc: 0x%x\n", sEM->pc);
+//    printf("actual PC: 0x%x\n", *PC);
 }
 
 void memory(){
+    printf("MEMORY\n");
     clearPipe(sMW);
     clearCTRL(sMW);
     // forward pipeline values to next stage
@@ -410,8 +473,8 @@ void memory(){
       // STORES: write to data mem
        int byteOffset = sMW->ALU_result & 0x00000003; 
        if(sMW->op == SW){
-          printf("write to memory: 0x%x", sMW->WD);
-            pipe2mem((sMW->ALU_result)>>2, sMW->WD);
+          printf("write to memory: 0x%x\n", sMW->WD);
+            pipe2mem(sMW->ALU_result>>2, sMW->WD);
         }else{// TODO SB, SH instruction
           printf("STORE NOT IMPLEMENTED");
         }
@@ -430,6 +493,7 @@ void memory(){
 }
 
 void writeBack(){
+    printf("\nWRITEBACK\n");
     if(sMW->MI == NOP)return;
     //check the control lines
     if( (MW->CTRL.MemtoReg == 0) && (MW->CTRL.RegDst == 0)){

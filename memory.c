@@ -4,6 +4,8 @@
 #include<stdio.h>
 #include"structs.h"
 
+
+
 uint32_t programImage1[MEM_SIZE]={ 
   0x00000bb8,//$sp = 3000
   0x00000bb8,//$fp = 3000

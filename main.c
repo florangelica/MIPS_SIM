@@ -17,12 +17,8 @@ int main (){
     *PC = (uint32_t) iMem[5];
     printf("PC: 0x%x\n", *PC);
     printf("iMem[*PC]: 0x%x\n", iMem[*PC]);
-/*  regFile[$sp] = iMem[0];
+    regFile[$sp] = iMem[0];
     regFile[$fp] = iMem[1];
-    regFile[$s0] = 0xffffffff;
-    regFile[$s1] = 0x00000001;
-    regFile[$v0] = 0x64;
-*/
     *CLK = 0;
 /*
     printf("FETCH STAGE\n");
@@ -50,14 +46,18 @@ int main (){
     printf("WRITEBACK STAGE\n");
     writeBack();
 */
-    // hazards();
-
     while(*PC != 0){
       if(*PC == 150){
         printf("copy array");
       }
+      if(*PC == 209){
+        printf("jr");
+      }
+      if(*PC == 10){
+        printf("shit DIDNT broke");
+      }
         fetch();
-        printPipe(FD);
+//        printPipe(FD);
         writeBack();
         decode();
 //        printPipe(DE);

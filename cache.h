@@ -3,7 +3,7 @@
 
 #include<stdint.h>
 
-#define CACHE_ON 1
+#define CACHE_ON 0
 
 #define BLK_SIZE 4      //words per block
 #define SET_ASS 1       //blocks per set
