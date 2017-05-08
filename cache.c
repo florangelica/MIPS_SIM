@@ -128,7 +128,7 @@ void mem2cache(int ID, uint32_t addr, int blkNum){
         Icache[indx].blk[blkNum].valid = 1;
         Icache[indx].blk[blkNum].dirty = 0;
         for( i=0; i<I_BLK_SIZE; i++){
-            Icache[indx].blk[blkNum].data[I_BLK_SIZE-i-1] = iMem[addr+i];
+            Icache[indx].blk[blkNum].data[i] = iMem[addr+i];
         }
         #if mem2cachePrint
         printf("m2c -- indx of cache:                       %x\n",indx);
@@ -146,7 +146,7 @@ void mem2cache(int ID, uint32_t addr, int blkNum){
         Dcache[indx].blk[blkNum].dirty = 0;
         Dcache[indx].blk[blkNum].blkAddr = addr;
         for( i=0; i<D_BLK_SIZE; i++){
-            Dcache[indx].blk[blkNum].data[D_BLK_SIZE-i-1] = iMem[addr+i];
+            Dcache[indx].blk[blkNum].data[i] = iMem[addr+i];
         }
         #if mem2cachePrint
         printf("m2c -- indx of cache:                       %x\n",indx);
@@ -215,8 +215,9 @@ uint32_t getBlock(int ID, uint32_t addr){
 void pipe2mem(uint32_t addr, uint32_t word ){
     if(CACHE_ON){
         int i;
-        uint32_t indx = getIndx(D,addr);
         uint32_t blkOff = getBlkOff(D,addr);
+        addr = getBlkAddr(D,addr);
+        uint32_t indx = getIndx(D,addr);
         int blkNum = getBlock(D,addr);
         // write word into cache
         Dcache[indx].blk[blkNum].data[blkOff] = word;
@@ -253,8 +254,9 @@ void pipe2mem(uint32_t addr, uint32_t word ){
 void mem2pipe(int ID, uint32_t addr){
     // ID dictates I cache or D cache
     // ID = 0 --> Dcache
-    uint32_t indx = getIndx(ID,addr);
     uint32_t blkOff = getBlkOff(ID,addr);
+    addr = getBlkAddr(ID,addr);
+    uint32_t indx = getIndx(ID,addr);
     uint32_t blkNum;
     #if mem2pipePrint
     printf("m2p -- index = %x\n",indx);
