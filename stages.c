@@ -297,7 +297,7 @@ void decode(){
             sDE->CTRL.RegWrite   = (uint8_t) 1;
         //I TYPE
         }else{
-//        printf("I-Type\n");
+            printf("I-Type\n");
             // ----- Set Pipe Fields 
             sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
             sDE->rt    = (uint8_t) ((FD->MI >> 16) & 0x1f);
@@ -316,7 +316,7 @@ void decode(){
             if((sDE->op == SW) ||(sDE->op == SB)|| (sDE->op == SH)){
                 sDE->CTRL.MemWrite   = (uint8_t) 1;  // write to memory for stores
             }else sDE->CTRL.RegWrite = (uint8_t) 1;  // else write a register
-            if(sDE->op == LW){
+            if((sDE->op == LW)||(sDE->op == LB)||(sDE->op == LB)||(sDE->op == LBU)||(sDE->op == LHU)){
                 sDE->CTRL.MemtoReg   = (uint8_t) 1;  // if a load write memory to register
                 sDE->CTRL.MemRead    = (uint8_t) 1;  // read memory for loads
             }
