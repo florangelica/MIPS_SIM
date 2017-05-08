@@ -128,7 +128,7 @@ void mem2cache(int ID, uint32_t addr, int blkNum){
         Icache[indx].blk[blkNum].valid = 1;
         Icache[indx].blk[blkNum].dirty = 0;
         for( i=0; i<I_BLK_SIZE; i++){
-            Icache[indx].blk[blkNum].data[I_BLK_SIZE-i-1] = iMem[addr+i];
+            Icache[indx].blk[blkNum].data[i] = iMem[addr+i];
         }
         #if mem2cachePrint
         printf("m2c -- indx of cache:                       %x\n",indx);
@@ -146,7 +146,7 @@ void mem2cache(int ID, uint32_t addr, int blkNum){
         Dcache[indx].blk[blkNum].dirty = 0;
         Dcache[indx].blk[blkNum].blkAddr = addr;
         for( i=0; i<D_BLK_SIZE; i++){
-            Dcache[indx].blk[blkNum].data[D_BLK_SIZE-i-1] = iMem[addr+i];
+            Dcache[indx].blk[blkNum].data[i] = iMem[addr+i];
         }
         #if mem2cachePrint
         printf("m2c -- indx of cache:                       %x\n",indx);
