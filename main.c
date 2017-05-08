@@ -54,7 +54,7 @@ int main (){
       if(*PC == 209){
         printf("jump to end of program  \n");
       }
-      if(*PC == 150){
+      if(*PC == 147){
         printf("copy array");
         i =0;
       }

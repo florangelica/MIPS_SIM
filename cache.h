@@ -8,20 +8,20 @@
 #define I_BLK_SIZE 4      //words per block
 #define I_SET_ASS 1       //blocks per set
 #define I_CS 8          //sets per Icache
-#define I_TAG_LEN 25      //bits of tag
+#define I_TAG_LEN 27      //bits of tag
 #define I_VAL_LEN 1       //bits of valid
 #define I_IDX_LEN 3       //bits of index
 #define I_BLO_LEN 2       //bits of block offset
-#define I_BYO_LEN 2       //bits of byte offset
+#define I_BYO_LEN 0       //bits of byte offset
 
 #define D_CS 8          //sets per Dcache
 #define D_BLK_SIZE 4      //words per block
 #define D_SET_ASS 1       //blocks per set
-#define D_TAG_LEN 25      //bits of tag
+#define D_TAG_LEN 27      //bits of tag
 #define D_VAL_LEN 1       //bits of valid
 #define D_IDX_LEN 3       //bits of index
 #define D_BLO_LEN 2       //bits of block offset
-#define D_BYO_LEN 2       //bits of byte offset
+#define D_BYO_LEN 0       //bits of byte offset
 
 #define WR_BACK 0
 

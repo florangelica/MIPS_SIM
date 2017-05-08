@@ -249,7 +249,7 @@ void pipe2mem(uint32_t addr, uint32_t word ){
 
 
 
-#define mem2pipePrint 0
+#define mem2pipePrint 1
 void mem2pipe(int ID, uint32_t addr){
     // ID dictates I cache or D cache
     // ID = 0 --> Dcache
