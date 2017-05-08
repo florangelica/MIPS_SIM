@@ -72,9 +72,9 @@ struct PIPE{
     uint32_t MI: 32;
     int32_t RD1: 32;
     int32_t RD2: 32;
-    uint32_t RD: 32;
+    int32_t RD: 32;
     uint32_t WD: 32;
-    uint32_t ALU_result: 32;
+    int32_t ALU_result: 32;
     uint8_t ALU_zero: 1;
     struct CONTROL CTRL;
 };

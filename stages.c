@@ -16,6 +16,7 @@ void fetch(){
     mem2pipe(1,*PC);
     sFD->pc =*PC;
     printf("FETCH: sFD->pc = %d, sFD->MI: 0x%x\n", FD->pc,  sFD->MI);
+    *PC = *PC +1;
 }
 void hazards(){
     // local control lines
@@ -199,8 +200,7 @@ void decode(){
 
     printf("DECODE: sDE->pc = %d, sDE->MI: 0x%x\n", sDE->pc,  sDE->MI);
     if(sDE->MI == NOP){
-        *PC = *PC+1;
-        return;
+      return;
     }else{
         sDE->op =(uint8_t) (FD->MI >> 26);
         // JUMP
@@ -211,7 +211,7 @@ void decode(){
             // insert bubbles
             //sFD->MI = (uint32_t) NOP;
             //clearCTRL(sFD);
-            sDE->MI = (uint32_t) NOP;
+            sDE->MI = (uint32_t) NOP; //jump--> nop for rest of pipeline
             clearCTRL(sDE);
             if(sDE->op == JAL){
                 regFile[$ra] = *PC + 2;
@@ -264,12 +264,8 @@ void decode(){
               sDE->MI = (uint32_t) NOP;
               clearCTRL(sDE);
               *PC =((sDE->pc) +1) + (int32_t)sDE->immed;
-            }else{
-              *PC = *PC+1;
             }
-            return;
         }else if(sDE->op == 0){
-            *PC = *PC + 1;
 //        printf("R-Type \n");
         // ----- Set Pipe Fields -----
             sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
@@ -301,7 +297,6 @@ void decode(){
             sDE->CTRL.RegWrite   = (uint8_t) 1;
         //I TYPE
         }else{
-            *PC = *PC + 1;
 //        printf("I-Type\n");
             // ----- Set Pipe Fields 
             sDE->rs    = (uint8_t) ((FD->MI >> 21) & 0x1f);
