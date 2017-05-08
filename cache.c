@@ -215,8 +215,9 @@ uint32_t getBlock(int ID, uint32_t addr){
 void pipe2mem(uint32_t addr, uint32_t word ){
     if(CACHE_ON){
         int i;
-        uint32_t indx = getIndx(D,addr);
         uint32_t blkOff = getBlkOff(D,addr);
+        addr = getBlkAddr(D,addr);
+        uint32_t indx = getIndx(D,addr);
         int blkNum = getBlock(D,addr);
         // write word into cache
         Dcache[indx].blk[blkNum].data[blkOff] = word;
@@ -253,8 +254,9 @@ void pipe2mem(uint32_t addr, uint32_t word ){
 void mem2pipe(int ID, uint32_t addr){
     // ID dictates I cache or D cache
     // ID = 0 --> Dcache
-    uint32_t indx = getIndx(ID,addr);
     uint32_t blkOff = getBlkOff(ID,addr);
+    addr = getBlkAddr(ID,addr);
+    uint32_t indx = getIndx(ID,addr);
     uint32_t blkNum;
     #if mem2pipePrint
     printf("m2p -- index = %x\n",indx);
